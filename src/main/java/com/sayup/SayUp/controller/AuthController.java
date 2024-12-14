@@ -34,23 +34,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequestDTO authRequestDTO) {
         logger.info("Login attempt with email: {}", authRequestDTO.getEmail());
-
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            authRequestDTO.getEmail(),
-                            authRequestDTO.getPassword()
-                    )
-            );
-
-            String jwt = jwtTokenProvider.createToken(authentication);
-            logger.info("Login successful for email: {}", authRequestDTO.getEmail());
-
-            return ResponseEntity.ok(new AuthResponseDTO(jwt));
-        } catch (Exception ex) {
-            logger.warn("Login failed for email: {}", authRequestDTO.getEmail());
-            throw ex;
-        }
+        AuthResponseDTO response = authService.login(authRequestDTO);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")

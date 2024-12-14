@@ -18,6 +18,7 @@ public class AuthRequestDTO {
 
     @NotBlank(message = "Password cannot be blank")
     private String password;
+
 }
 
 
