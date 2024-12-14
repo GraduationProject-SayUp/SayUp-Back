@@ -26,13 +26,20 @@ public class JwtTokenProvider {
         this.validityInMilliseconds = validityInMilliseconds;
     }
 
+    /**
+     * JWT 토큰 생성
+     * @param authentication Spring Security Authentication 객체
+     * @return 생성된 JWT 토큰
+     */
     public String createToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername(); // 이메일 반환
+
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(email)  // 이메일을 subject로 설정
                 .claim("roles", userDetails.getAuthorities().toString())
                 .setIssuedAt(now)
                 .setExpiration(validity)
@@ -40,6 +47,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    /**
+     * JWT 토큰 유효성 검증
+     * @param token 검증할 JWT 토큰
+     * @return 토큰이 유효하면 true, 그렇지 않으면 false
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -53,18 +65,23 @@ public class JwtTokenProvider {
             System.err.println("Invalid token format: " + e.getMessage());
         } catch (UnsupportedJwtException e) {
             System.err.println("Unsupported token: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Invalid token: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println("Token is null or empty: " + e.getMessage());
         }
         return false;
     }
 
+    /**
+     * JWT 토큰에서 이메일(사용자 식별자) 추출
+     * @param token JWT 토큰
+     * @return 토큰에서 추출한 이메일
+     */
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return claims != null ? claims.getSubject() : null;
+        return claims.getSubject();
     }
 }

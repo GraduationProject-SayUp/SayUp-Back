@@ -1,16 +1,14 @@
 package com.sayup.SayUp.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class AuthResponseDTO {
     private String token;
     private String email;
 
+    public AuthResponseDTO(String token, String email) {
+        this.token = token;
+        this.email = email;
+    }
 }

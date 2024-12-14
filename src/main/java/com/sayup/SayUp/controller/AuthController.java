@@ -1,54 +1,59 @@
 package com.sayup.SayUp.controller;
 
-import com.sayup.SayUp.security.JwtTokenProvider;
 import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.dto.UserDto;
+import com.sayup.SayUp.dto.UserDTO;
 import com.sayup.SayUp.service.AuthService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
     private final AuthService authService;
 
-    public AuthController(
-            AuthenticationManager authenticationManager,
-            JwtTokenProvider jwtTokenProvider,
-            AuthService authService
-    ) {
-        this.authenticationManager = authenticationManager;
-        this.jwtTokenProvider = jwtTokenProvider;
+    public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody AuthRequestDTO authRequestDTO) {
-        logger.info("Login attempt with email: {}", authRequestDTO.getEmail());
-        AuthResponseDTO response = authService.login(authRequestDTO);
-        return ResponseEntity.ok(response);
-    }
-
+    /**
+     * 사용자 회원가입 처리
+     * @param userDTO 사용자 이메일 및 비밀번호 정보
+     * @return 회원가입 성공 또는 실패 메시지
+     */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserDto userDto) {
-        logger.info("Register attempt with email: {}", userDto.getEmail());
-
+    public ResponseEntity<String> register(@Valid @RequestBody UserDTO userDTO) {
+        logger.info("Register attempt with email: {}", userDTO.getEmail());
         try {
-            authService.register(userDto);
-            logger.info("Registration successful for email: {}", userDto.getEmail());
+            authService.register(userDTO);
             return ResponseEntity.ok("User registered successfully!");
         } catch (Exception ex) {
-            logger.error("Registration failed for email: {}", userDto.getEmail(), ex);
+            logger.error("Registration failed for email: {}", userDTO.getEmail(), ex);
             return ResponseEntity.badRequest().body("Registration failed: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * 사용자 로그인 처리
+     * @param authRequestDTO 사용자의 이메일 및 비밀번호
+     * @return JWT 토큰 및 사용자 정보
+     */
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
+        logger.info("Login attempt with email: {}", authRequestDTO.getEmail());
+        try {
+            AuthResponseDTO response = authService.login(authRequestDTO);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            logger.error("Login failed for email: {}", authRequestDTO.getEmail(), ex);
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }

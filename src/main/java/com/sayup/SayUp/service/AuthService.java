@@ -3,14 +3,14 @@ package com.sayup.SayUp.service;
 import com.sayup.SayUp.controller.AuthController;
 import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.dto.UserDto;
+import com.sayup.SayUp.dto.UserDTO;
 import com.sayup.SayUp.model.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,47 +18,53 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
 
-
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
 
 
 @Service
 public class AuthService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    @Lazy
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, @Lazy AuthenticationManager authenticationManager,
-                       JwtTokenProvider jwtTokenProvider) {
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtTokenProvider jwtTokenProvider,
+                       @Lazy AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    // 회원가입 로직
-    public void register(UserDto userDto) {
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists!");
-        }
+    /**
+     * 회원가입 로직
+     * @param userDto 회원가입 요청 DTO
+     */
+    public void register(UserDTO userDto) {
+        userRepository.findByEmail(userDto.getEmail()).ifPresent(user -> {
+            logger.info("Registration attempt failed: Email already exists - {}", userDto.getEmail());
+            throw new IllegalArgumentException("The email address is already in use. Please try another one.");
+        });
 
         User user = new User();
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 암호화
 
         userRepository.save(user);
+        logger.info("User registered successfully with email: {}", userDto.getEmail());
     }
 
-    // UserDetailsService 구현: 사용자 정보 로드
+    /**
+     * Spring Security UserDetailsService 구현
+     * @param email 사용자 이메일
+     * @return UserDetails 객체
+     * @throws UsernameNotFoundException 사용자 찾지 못했을 때 예외
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
@@ -71,42 +77,23 @@ public class AuthService implements UserDetailsService {
                 .build();
     }
 
-    public boolean checkPassword(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
-    }
-
-    // 로그인 로직 추가
+    /**
+     * 로그인 로직
+     * @param authRequestDTO 로그인 요청 DTO
+     * @return AuthResponseDTO (JWT와 사용자 이메일)
+     */
     public AuthResponseDTO login(AuthRequestDTO authRequestDTO) {
-        Optional<User> userOptional = userRepository.findByEmail(authRequestDTO.getEmail());
-
-        if (userOptional.isEmpty()) {
-            throw new BadCredentialsException("User not found");
-        }
-
-        User user = userOptional.get();
-
-        // 비밀번호 검증
-        if (!passwordEncoder.matches(authRequestDTO.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid password");
-        }
-
-        // 인증 토큰 생성
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .authorities(new ArrayList<>()) // 권한 설정
-                .build();
-
-        // Authentication 객체 생성
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities()
+        // Authentication 객체 생성 및 인증
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        authRequestDTO.getEmail(),
+                        authRequestDTO.getPassword()
+                )
         );
 
-
-        // JWT 토큰 생성
         String jwt = jwtTokenProvider.createToken(authentication);
 
         logger.info("Login successful for email: {}", authRequestDTO.getEmail());
-        return new AuthResponseDTO(jwt, user.getEmail());
+        return new AuthResponseDTO(jwt, authRequestDTO.getEmail());
     }
 }
