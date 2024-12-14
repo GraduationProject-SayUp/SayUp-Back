@@ -1,4 +1,4 @@
-package com.sayup.SayUp.model;
+package com.sayup.SayUp.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
