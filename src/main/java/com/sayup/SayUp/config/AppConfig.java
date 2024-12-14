@@ -1,11 +1,7 @@
 package com.sayup.SayUp.config;
 
-import com.sayup.SayUp.security.JwtAuthenticationFilter;
-import com.sayup.SayUp.security.JwtTokenProvider;
-import com.sayup.SayUp.service.AuthService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
