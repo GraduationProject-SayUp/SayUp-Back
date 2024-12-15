@@ -1,6 +1,6 @@
 package com.sayup.SayUp.controller;
 
-import com.sayup.SayUp.model.User;
+import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
