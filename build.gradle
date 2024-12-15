@@ -45,6 +45,9 @@ dependencies {
 
 	// JSON 파싱용 Jackson 라이브러리
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+	// macOS DNS 해석 의존성
+	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64'
 }
 
 tasks.named('test') {
