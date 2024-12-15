@@ -30,7 +30,8 @@ public class SecurityConfig {
                         "/api/auth/**",
                         "/api/users/**",
                         "/api/chat/**",
-                        "/api/audio/**")) // 특정 경로에서 CSRF 비활성화
+                        "/api/audio/**",
+                        "/websocket/**")) // 특정 경로에서 CSRF 비활성화
                 // 세션 비활성화 (JWT 사용)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 인증 및 권한 설정
@@ -38,7 +39,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/api/chat/**",
-                                "/api/audio/**").permitAll() // 인증 없이 접근 가능 경로
+                                "/api/audio/**",
+                                "/websocket/**").permitAll() // 인증 없이 접근 가능 경로
                         .anyRequest().authenticated() // 나머지 요청 인증 필요
                 )
                 // CORS 설정

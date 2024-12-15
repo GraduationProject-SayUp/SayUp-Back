@@ -6,23 +6,24 @@ import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.repository.UserVoiceRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -75,12 +76,11 @@ public class UserVoiceService {
             userVoiceRepository.save(userVoice);
 
             logger.info("File information saved to DB for user: {}", email);
+            // 비동기로 파이썬 서버 호출
+            processFileAsync(token, destination.toString(), user);
 
-            // 파이썬 서버에 파일 처리 요청
-            String pythonResponse = sendToPythonServer(token, destination.toString());
-            logger.info("Python server response: {}", pythonResponse);
-
-            return ResponseEntity.ok("File saved successfully and processed by Python server.");
+            // 즉시 성공 응답 반환
+            return ResponseEntity.ok("File upload successful");
         } catch (IOException e) {
             logger.error("Error saving file", e);
             return ResponseEntity.internalServerError().body("File save failed: " + e.getMessage());
@@ -88,6 +88,21 @@ public class UserVoiceService {
             logger.error("Unexpected error occurred", e);
             return ResponseEntity.internalServerError().body("Unexpected error: " + e.getMessage());
         }
+    }
+
+    @Async
+    public CompletableFuture<Void> processFileAsync(String token, String filePath, User user) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                // 파이썬 서버 호출
+                String pythonResponse = sendToPythonServer(token, filePath);
+
+                logger.info("Python server response: {}", pythonResponse);
+
+            } catch (Exception e) {
+                logger.error("Error processing file asynchronously", e);
+            }
+        });
     }
 
     private String sendToPythonServer(String token, String filePath) {
