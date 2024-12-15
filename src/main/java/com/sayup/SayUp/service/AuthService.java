@@ -4,7 +4,7 @@ import com.sayup.SayUp.controller.AuthController;
 import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
 import com.sayup.SayUp.dto.UserDTO;
-import com.sayup.SayUp.model.User;
+import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import org.slf4j.Logger;
