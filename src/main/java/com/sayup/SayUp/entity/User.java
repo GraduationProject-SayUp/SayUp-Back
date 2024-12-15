@@ -28,6 +28,6 @@ public class User {
     private String password;
 
     @Lob
-    private byte[] ttsVector;
+    private String ttsVector;
 }
 
