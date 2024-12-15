@@ -7,9 +7,12 @@ import com.sayup.SayUp.repository.UserVoiceRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +21,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,16 +32,18 @@ public class UserVoiceService {
     private final UserVoiceRepository userVoiceRepository;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RestTemplate restTemplate;
 
-    @Value("${file.upload-dir}") //파일이 저장되게 될 위치
+    @Value("${file.upload-dir}") // 파일 저장 위치
     private String uploadDir;
 
-    public ResponseEntity<String> uploadFile(
-            String token,
-            @RequestParam("file")MultipartFile file
-    ){
-        try{
-            if(file.isEmpty()){
+    @Value("${python.server.url}") // Python 서버 URL
+    private String pythonServerUrl;
+
+    public ResponseEntity<String> uploadFile(String token, MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                logger.warn("Upload failed: No file attached.");
                 return ResponseEntity.badRequest().body("File is empty");
             }
 
@@ -48,31 +55,69 @@ public class UserVoiceService {
             // 파일 저장
             String originalFileName = file.getOriginalFilename();
             Path uploadPath = Paths.get(uploadDir);
-
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
-                logger.info("Created upload directory at: {}", uploadPath);
+                logger.info("Upload directory created at: {}", uploadPath);
             }
 
             Path destination = Paths.get(uploadDir, originalFileName);
             file.transferTo(destination.toFile());
             logger.info("File saved at: {}", destination);
 
-            // DB에 파일 정보 저장
-            UserVoice userVoice = new UserVoice();
+            // 기존 UserVoice 확인
+            UserVoice userVoice = userVoiceRepository.findByUser(user)
+                    .orElse(new UserVoice()); // 없으면 새로 생성
+
+            // UserVoice 업데이트 또는 새로 설정
             userVoice.setUser(user);
             userVoice.setFileName(originalFileName);
             userVoice.setFilePath(destination.toString());
             userVoiceRepository.save(userVoice);
 
             logger.info("File information saved to DB for user: {}", email);
-            return ResponseEntity.ok("File saved successfully: " + destination.toString());
+
+            // 파이썬 서버에 파일 처리 요청
+            String pythonResponse = sendToPythonServer(token, destination.toString());
+            logger.info("Python server response: {}", pythonResponse);
+
+            return ResponseEntity.ok("File saved successfully and processed by Python server.");
         } catch (IOException e) {
             logger.error("Error saving file", e);
             return ResponseEntity.internalServerError().body("File save failed: " + e.getMessage());
         } catch (Exception e) {
             logger.error("Unexpected error occurred", e);
             return ResponseEntity.internalServerError().body("Unexpected error: " + e.getMessage());
+        }
+    }
+
+    private String sendToPythonServer(String token, String filePath) {
+        try {
+            // HTTP 헤더 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            headers.set("Authorization", token);
+
+            // 요청 본문 설정
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", new FileSystemResource(filePath));
+
+            // HTTP 요청 생성
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+            String pythonEndpoint = pythonServerUrl + "/upload";
+
+            // Python 서버에 POST 요청
+            ResponseEntity<String> response = restTemplate.postForEntity(pythonEndpoint, requestEntity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                logger.info("Python server response received successfully.");
+                return response.getBody();
+            } else {
+                logger.warn("Python server returned non-200 status: {}", response.getStatusCode());
+                throw new RuntimeException("Python server error: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("Error sending file to Python server", e);
+            throw new RuntimeException("Error sending file to Python server: " + e.getMessage(), e);
         }
     }
 }

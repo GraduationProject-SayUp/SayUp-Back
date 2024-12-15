@@ -48,6 +48,9 @@ dependencies {
 
 	// macOS DNS 해석 의존성
 	implementation 'io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64'
+
+	// Spring Web 의존성
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
 tasks.named('test') {
