@@ -14,18 +14,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-// 변환 벡터 파이썬에서 계산 후 유저별로 저장하는 컨트롤러
+// 사용자 TTS 벡터 저장 컨트롤러
+// 사용자의 JWT를 통해 인증된 이메일을 기반으로 TTS 벡터를 비동기로 저장
 
 @RestController
-@RequestMapping("/api/users")
-public class TTSController {
-    private static final Logger logger = LoggerFactory.getLogger(TTSController.class);
+@RequestMapping("/api/users/tts")
+public class UserTTSVectorController {
+    private static final Logger logger = LoggerFactory.getLogger(UserTTSVectorController.class);
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
-    public TTSController(JwtTokenProvider jwtTokenProvider,
-                         UserRepository userRepository) {
+    public UserTTSVectorController(JwtTokenProvider jwtTokenProvider,
+                                   UserRepository userRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
     }
@@ -48,7 +49,7 @@ public class TTSController {
         });
     }
 
-    @PostMapping("/tts-vector")
+    @PostMapping
     public ResponseEntity<Map<String, String>> initiateVectorSave(
             @RequestHeader("Authorization") String token,
             @RequestBody Map<String, String> body) {

@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -79,7 +78,6 @@ public class UserVoiceService {
             // 비동기로 파이썬 서버 호출
             processFileAsync(token, destination.toString(), user);
 
-            // 즉시 성공 응답 반환
             return ResponseEntity.ok("File upload successful");
         } catch (IOException e) {
             logger.error("Error saving file", e);

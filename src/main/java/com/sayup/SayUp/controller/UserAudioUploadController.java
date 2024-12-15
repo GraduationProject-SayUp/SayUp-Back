@@ -8,19 +8,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-// 음성 파일을 저장 후 파이썬 비동기화 호출
+// 사용자 음성 파일 업로드 컨트롤러
+// 클라이언트에서 음성 파일을 업로드하고, 이를 비동기적으로 처리하여 TTS 분석을 위한 데이터를 생성
 
 @RestController
-@RequestMapping("/api/audio")
-public class UserVoiceController {
-    private static final Logger logger = LoggerFactory.getLogger(UserVoiceController.class);
+@RequestMapping("/api/users/audio")
+public class UserAudioUploadController {
+    private static final Logger logger = LoggerFactory.getLogger(UserAudioUploadController.class);
     private final UserVoiceService userVoiceService;
 
-    public UserVoiceController(UserVoiceService userVoiceService, UserVoiceRepository userVoiceRepository) {
+    public UserAudioUploadController(UserVoiceService userVoiceService, UserVoiceRepository userVoiceRepository) {
         this.userVoiceService = userVoiceService;
     }
 
-    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<String> uploadFile(
             @RequestHeader("Authorization") String token,
             @RequestParam("file")MultipartFile file){
