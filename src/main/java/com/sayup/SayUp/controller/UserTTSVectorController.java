@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+// 변환 벡터 파이썬에서 계산 후 유저별로 저장하는 컨트롤러
+
 @RestController
 @RequestMapping("/api/users")
 public class TTSController {
@@ -28,7 +30,7 @@ public class TTSController {
         this.userRepository = userRepository;
     }
 
-    @Async // 비동기 처리를 위한 어노테이션
+    @Async
     public CompletableFuture<Void> processAndSaveTTSVector(String email, String ttsVector) {
         return CompletableFuture.runAsync(() -> {
             try {

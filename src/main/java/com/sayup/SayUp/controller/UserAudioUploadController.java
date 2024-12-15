@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+// 음성 파일을 저장 후 파이썬 비동기화 호출
+
 @RestController
 @RequestMapping("/api/audio")
 public class UserVoiceController {
