@@ -28,12 +28,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/audio/**")) // 특정 경로에서 CSRF 비활성화
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/audio/**", "/api/auth/**")) // 특정 경로에서 CSRF 비활성화
                 // 세션 비활성화 (JWT 사용)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/audio/**").permitAll() // 인증 없이 접근 가능 경로
+                        .requestMatchers("/api/audio/**","/api/auth/**").permitAll() // 인증 없이 접근 가능 경로
                         .anyRequest().authenticated() // 나머지 요청 인증 필요
                 )
                 // CORS 설정
@@ -47,7 +47,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://10.0.2.2"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://10.0.2.2", "http://localhost:8080"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true); // 쿠키 전송 허용

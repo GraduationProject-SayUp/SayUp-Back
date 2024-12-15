@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 public class UserVoiceService {
     private final UserVoiceRepository userVoiceRepository;
 
-    @Value("$(file.upload-dir)") //파일이 저장되게 될 위치
+    @Value("${file.upload-dir}") //파일이 저장되게 될 위치
     private String uploadDir;
 
     public ResponseEntity<String> uploadFile(User user, @RequestParam("file")MultipartFile file){

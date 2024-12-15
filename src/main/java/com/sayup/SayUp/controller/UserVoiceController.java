@@ -4,10 +4,7 @@ import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserVoiceRepository;
 import com.sayup.SayUp.service.UserVoiceService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -20,8 +17,9 @@ public class UserVoiceController {
         this.userVoiceService = userVoiceService;
     }
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
     public ResponseEntity<String> uploadFile(User user, @RequestParam("file")MultipartFile file){
+        System.out.println("Request received to upload file");
         return userVoiceService.uploadFile(user,file);
     }
 }
