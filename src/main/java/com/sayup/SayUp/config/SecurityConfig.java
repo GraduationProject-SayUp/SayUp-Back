@@ -35,8 +35,7 @@ public class SecurityConfig {
                 // 인증 및 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/api/**").permitAll() // 인증 없이 접근 가능 경로
+                                "/api/auth/**").permitAll() // 인증 없이 접근 가능 경로
                         .anyRequest().authenticated() // 나머지 요청 인증 필요
                 )
                 // CORS 설정

@@ -1,8 +1,10 @@
 package com.sayup.SayUp.security;
 
+import com.sayup.SayUp.service.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -14,16 +16,19 @@ import java.util.Date;
 public class JwtTokenProvider {
     private final Key secretKey;
     private final long validityInMilliseconds;
+    private final AuthService authService;
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secretKeyString,
-            @Value("${jwt.expiration}") long validityInMilliseconds
+            @Value("${jwt.expiration}") long validityInMilliseconds,
+            @Lazy AuthService authService
     ) {
         if (secretKeyString.length() < 32) {
             throw new IllegalArgumentException("Secret key must be at least 32 characters long");
         }
         this.secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes());
         this.validityInMilliseconds = validityInMilliseconds;
+        this.authService = authService;
     }
 
     /**
@@ -54,6 +59,12 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
+            // 블랙리스트에 있는지 확인
+            if (authService.isTokenBlacklisted(token)) {
+                System.err.println("Token is blacklisted");
+                return false;
+            }
+
             Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()

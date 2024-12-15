@@ -18,8 +18,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Service
@@ -28,6 +31,8 @@ public class AuthService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final Set<String> tokenBlacklist = new HashSet<>();
+
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 
@@ -95,5 +100,33 @@ public class AuthService implements UserDetailsService {
 
         logger.info("Login successful for email: {}", authRequestDTO.getEmail());
         return new AuthResponseDTO(jwt, authRequestDTO.getEmail());
+    }
+
+    /**
+     * 토큰을 블랙리스트에 추가
+     * @param token 무효화할 토큰
+     */
+    public void invalidateToken(String token) {
+        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+            tokenBlacklist.add(token);
+            logger.info("Token invalidated and added to blacklist: {}", token);
+        } else {
+            logger.warn("Attempted to invalidate an invalid or empty token.");
+            throw new IllegalArgumentException("Invalid token. Cannot invalidate.");
+        }
+    }
+
+
+    /**
+     * 토큰이 블랙리스트에 있는지 확인
+     * @param token 확인할 토큰
+     * @return 블랙리스트 여부
+     */
+    public boolean isTokenBlacklisted(String token) {
+        if (!StringUtils.hasText(token)) {
+            logger.warn("Empty token checked for blacklist.");
+            throw new IllegalArgumentException("Token cannot be empty.");
+        }
+        return tokenBlacklist.contains(token);
     }
 }

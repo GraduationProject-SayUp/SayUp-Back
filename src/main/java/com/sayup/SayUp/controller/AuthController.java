@@ -7,11 +7,9 @@ import com.sayup.SayUp.service.AuthService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,7 +27,7 @@ public class AuthController {
      * @return 회원가입 성공 또는 실패 메시지
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<String> register(@RequestBody @Valid UserDTO userDTO) {
         logger.info("Register attempt with email: {}", userDTO.getEmail());
         try {
             authService.register(userDTO);
@@ -55,5 +53,30 @@ public class AuthController {
             logger.error("Login failed for email: {}", authRequestDTO.getEmail(), ex);
             return ResponseEntity.badRequest().body(null);
         }
+    }
+
+    /**
+     * 로그아웃 엔드포인트
+     * @param token 클라이언트가 전달한 JWT
+     * @return 성공 여부
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Authorization header is missing or empty");
+        }
+
+        // "Bearer " 제거 후 토큰 추출
+        token = token.substring(7);
+
+        // 이미 블랙리스트에 있는지 확인
+        if (authService.isTokenBlacklisted(token)) {
+            return ResponseEntity.badRequest().body("Token is already invalidated.");
+        }
+
+        // 토큰 블랙리스트에 추가
+        authService.invalidateToken(token);
+        logger.info("Token invalidated successfully: {}", token);
+        return ResponseEntity.ok("Logout successful");
     }
 }
