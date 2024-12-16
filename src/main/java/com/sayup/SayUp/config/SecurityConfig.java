@@ -27,9 +27,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers(
-                        "/api/auth/**",
-                        "/api/**")) // 특정 경로에서 CSRF 비활성화
+                .csrf(csrf -> csrf.disable())
                 // 세션 비활성화 (JWT 사용)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 인증 및 권한 설정
