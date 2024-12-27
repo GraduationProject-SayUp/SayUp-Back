@@ -1,6 +1,7 @@
 package com.sayup.SayUp.service;
 
 import com.sayup.SayUp.controller.FriendshipController;
+import com.sayup.SayUp.dto.PendingRequestDTO;
 import com.sayup.SayUp.entity.FriendRelationship;
 import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.FriendshipRepository;
@@ -94,12 +95,13 @@ public class FriendshipService {
                 .collect(Collectors.toList());
     }
 
-    public List<User> getPendingRequests(CustomUserDetails userDetails) {
+    public List<PendingRequestDTO> getPendingRequests(CustomUserDetails userDetails) {
         User user = userDetails.getUser();
         List<FriendRelationship> relationships = friendshipRepository.findByAddresseeAndStatus(user, FriendRelationship.FriendshipStatus.PENDING);
         logger.info("Finding pending requests for user: {}, results: {}", user.getUserId(), relationships.size());
+
         return relationships.stream()
-                .map(FriendRelationship::getRequester)
+                .map(rel -> new PendingRequestDTO(rel.getId(), rel.getRequester()))
                 .collect(Collectors.toList());
     }
 }
