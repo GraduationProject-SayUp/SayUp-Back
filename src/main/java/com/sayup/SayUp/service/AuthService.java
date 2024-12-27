@@ -6,6 +6,7 @@ import com.sayup.SayUp.dto.AuthResponseDTO;
 import com.sayup.SayUp.dto.UserDTO;
 import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserRepository;
+import com.sayup.SayUp.security.CustomUserDetails;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -75,11 +79,14 @@ public class AuthService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
+        /*
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
                 .authorities(Collections.emptyList()) // 권한 설정
                 .build();
+         */
+        return new CustomUserDetails(user);
     }
 
     /**
@@ -128,5 +135,10 @@ public class AuthService implements UserDetailsService {
             throw new IllegalArgumentException("Token cannot be empty.");
         }
         return tokenBlacklist.contains(token);
+    }
+
+    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
+        // 모든 사용자에게 "ROLE_USER" 권한을 부여
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 }
