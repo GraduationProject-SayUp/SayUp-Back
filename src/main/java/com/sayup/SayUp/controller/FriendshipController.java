@@ -1,8 +1,11 @@
 package com.sayup.SayUp.controller;
 
+import com.sayup.SayUp.dto.PendingRequestDTO;
 import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.security.CustomUserDetails;
 import com.sayup.SayUp.service.FriendshipService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,13 +13,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/friend")
+@RequestMapping("/api/friends")
 public class FriendshipController {
 
     @Autowired
@@ -86,8 +86,7 @@ public class FriendshipController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<List<User>> getPendingRequests(
-            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<PendingRequestDTO>> getPendingRequests(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
             logger.warn("Failed to get pending requests: User not authenticated");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -96,7 +95,7 @@ public class FriendshipController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
-        return ResponseEntity.ok(friendshipService.getPendingRequests(customUserDetails));
+        List<PendingRequestDTO> pendingRequests = friendshipService.getPendingRequests(userDetails);
+        return ResponseEntity.ok(pendingRequests);
     }
 }
