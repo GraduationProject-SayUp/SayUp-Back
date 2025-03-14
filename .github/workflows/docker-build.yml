@@ -10,15 +10,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
-    services:
-      mysql:
-        uses: mirromutth/mysql-action@v1.1
-        with:
-          host port: 3306
-          container port: 3306
-          mysql database: 'sayup_db'
-          mysql root password: '0000'
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -26,15 +17,23 @@ jobs:
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
-        distribution: 'temurin'
-        java-version: '17'
-        cache: 'gradle'
+        distribution: temurin
+        java-version: 17
+        cache: gradle
         
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
       
     - name: Create file upload directory
       run: mkdir -p /tmp/file/temp
+      
+    - name: Start MySQL
+      uses: mirromutth/mysql-action@v1.1
+      with:
+        host-port: 3306
+        container-port: 3306
+        mysql-database: sayup_db
+        mysql-root-password: "0000"
       
     - name: Wait for MySQL to be ready
       run: |
@@ -56,7 +55,7 @@ jobs:
         DB_CONNECTION: mysql
         DB_NAME: sayup_db
         DB_USERNAME: root
-        DB_PASSWORD: '0000'
+        DB_PASSWORD: "0000"
         DB_HOST: 127.0.0.1
         FILE_UPLOAD_DIR: /tmp/file/temp
         API_KEY: temp
