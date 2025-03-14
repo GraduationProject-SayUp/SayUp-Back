@@ -37,45 +37,67 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                // 세션 비활성화 (JWT 사용)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 인증 및 권한 설정
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/swagger-ui/**",
-                                "v3/api-docs/**").permitAll() // 인증 없이 접근 가능 경로
-                        .anyRequest().authenticated() // 나머지 요청 인증 필요
-                )
-                // CORS 설정
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // JWT 필터 추가
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // 공개 API 경로 - 인증 없이 접근 가능한 경로 목록
+        final String[] PUBLIC_URLS = {
+                "/api/auth/**",      // 인증 관련 API
+                "/swagger-ui/**",    // Swagger UI
+                "/v3/api-docs/**"    // OpenAPI 문서
+        };
 
-        return http.build();
+        return http
+                // CSRF 보호 비활성화 (REST API는 CSRF 공격에 덜 취약함)
+                .csrf(csrf -> csrf.disable())
+
+                // 세션 관리 설정 - JWT 사용으로 세션 상태 저장 안함
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 요청 권한 설정
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PUBLIC_URLS).permitAll()  // 공개 URL 허용
+                        .anyRequest().authenticated()              // 나머지 요청은 인증 필요
+                )
+
+                // CORS 설정 적용
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // JWT 필터 추가 (UsernamePasswordAuthenticationFilter 이전에 실행)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .build();
     }
 
+    /**
+     * 인증 관리자 Bean 설정
+     * 사용자 인증 처리를 위한 AuthenticationManager 구성
+     */
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder
-                .userDetailsService(authService)
-                .passwordEncoder(passwordEncoder);
+                .userDetailsService(authService)  // 사용자 정보 서비스 설정
+                .passwordEncoder(passwordEncoder);  // 비밀번호 인코더 설정
         return authenticationManagerBuilder.build();
     }
 
+    /**
+     * CORS 설정 소스 Bean 설정
+     * Cross Origin Resource Sharing 정책 구성
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         configuration.setAllowedOrigins(Collections.singletonList("*")); // 모든 Origin 허용
         configuration.setAllowedMethods(Collections.singletonList("*")); // 모든 HTTP Method 허용
         configuration.setAllowedHeaders(Collections.singletonList("*")); // 모든 Header 허용
-        configuration.setAllowCredentials(true); // 쿠키 전송 허용
 
+        configuration.setAllowCredentials(false); // 쿠키 사용 X
+
+        // 모든 경로에 적용
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 적용
+        source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }
