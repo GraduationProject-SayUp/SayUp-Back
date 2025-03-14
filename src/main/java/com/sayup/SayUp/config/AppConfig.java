@@ -10,11 +10,18 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class AppConfig {
+
+    /**
+     * 비밀번호 암호화
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * RESTful 웹 서비스와의 통신을 위한 객체
+     */
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

@@ -19,11 +19,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Collections;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity  // Spring Security의 설정을 활성화
 public class SecurityConfig {
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthService authService;
-    private final PasswordEncoder passwordEncoder;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;  // JWT 인증 필터
+    private final AuthService authService;  // 사용자 인증 서비스 (사용자 정보를 로드하고 인증 처리)
+    private final PasswordEncoder passwordEncoder;  // 비밀번호 암호화 인코더
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AuthService authService, PasswordEncoder passwordEncoder) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -31,6 +31,10 @@ public class SecurityConfig {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * 보안 필터 체인 구성
+     * HTTP 요청에 대한 보안 규칙 정의
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
