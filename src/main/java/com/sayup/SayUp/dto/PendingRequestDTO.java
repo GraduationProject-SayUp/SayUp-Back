@@ -2,11 +2,9 @@ package com.sayup.SayUp.dto;
 
 import com.sayup.SayUp.entity.User;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 public class PendingRequestDTO {
     private Long relationshipId;
