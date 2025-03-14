@@ -2,31 +2,30 @@ name: Docker Image CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
-    # MySQL 서비스 추가
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: 0000
-          MYSQL_DATABASE: sayup_db
-          MYSQL_USER: user
-          MYSQL_PASSWORD: 0000
+          MYSQL_ROOT_PASSWORD: "0000"
+          MYSQL_DATABASE: "sayup_db"
+          MYSQL_USER: "user"
+          MYSQL_PASSWORD: "0000"
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-          --name=mysql
+          --health-cmd "mysqladmin ping -h localhost -u root -p0000"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name mysql
     
     steps:
     - name: Checkout code
@@ -45,13 +44,19 @@ jobs:
     - name: Create file upload directory
       run: mkdir -p /tmp/file/temp
       
-    # MySQL 연결 문제를 해결하기 위한 접근 방식 수정
     - name: Wait for MySQL to be ready
       run: |
         echo "Waiting for MySQL to be ready..."
-        # 대신 MySQL 컨테이너가 정상적으로 준비될 때까지 대기
-        timeout 30s bash -c 'until docker exec mysql mysql -u root -p0000 -e "SELECT 1"; do sleep 2; done'
-        echo "MySQL is ready!"
+        for i in {1..30}; do
+          if mysqladmin ping -h "mysql" -u root -p"0000" --silent; then
+            echo "MySQL is ready!"
+            exit 0
+          fi
+          echo "Waiting for MySQL... ($i)"
+          sleep 2
+        done
+        echo "MySQL did not become ready in time!"
+        exit 1
       
     - name: Build with Gradle (including tests)
       run: ./gradlew build
@@ -60,7 +65,7 @@ jobs:
         DB_NAME: sayup_db
         DB_USERNAME: root
         DB_PASSWORD: 0000
-        DB_HOST: mysql # 서비스 컨테이너 이름으로 호스트 변경
+        DB_HOST: mysql
         FILE_UPLOAD_DIR: /tmp/file/temp
         API_KEY: temp
       
