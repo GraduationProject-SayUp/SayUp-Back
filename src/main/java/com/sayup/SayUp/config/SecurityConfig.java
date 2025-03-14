@@ -2,6 +2,7 @@ package com.sayup.SayUp.config;
 
 import com.sayup.SayUp.security.JwtAuthenticationFilter;
 import com.sayup.SayUp.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,16 +21,11 @@ import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity  // Spring Security의 설정을 활성화
+@RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;  // JWT 인증 필터
     private final AuthService authService;  // 사용자 인증 서비스 (사용자 정보를 로드하고 인증 처리)
     private final PasswordEncoder passwordEncoder;  // 비밀번호 암호화 인코더
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AuthService authService, PasswordEncoder passwordEncoder) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.authService = authService;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * 보안 필터 체인 구성
