@@ -25,14 +25,14 @@ jobs:
       run: chmod +x ./gradlew
       
     - name: Create file upload directory
-      run: mkdir -p /tmp/file/temp
+      run: mkdir -p /file/userVoice
       
     # 테스트를 건너뛰고 빌드만 실행
     - name: Build with Gradle (skip tests)
       run: ./gradlew build -x test
       env:
         FILE_UPLOAD_DIR: /tmp/file/temp
-        API_KEY: temp
+        API_KEY: ${{ secrets.ChatGptAPI }}
       
     - name: Login to Docker Hub
       uses: docker/login-action@v2
@@ -42,19 +42,26 @@ jobs:
         
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
+
+    - name: Get version
+      id: get_version
+      run: echo "VERSION=$(./gradlew properties -q | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
       
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/sayup:latest,${{ secrets.DOCKERHUB_USERNAME }}/sayup:${{ github.sha }}
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/sayup:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/sayup:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/sayup:${{ env.VERSION }}
         cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/sayup:buildcache
         cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/sayup:buildcache,mode=max
         build-args: |
           DB_CONNECTION=mysql
           DB_NAME=sayup_db
           DB_USERNAME=root
+          FILE_UPLOAD_DIR=/file/userVoice
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          FILE_UPLOAD_DIR=/file/temp
           API_KEY=${{ secrets.ChatGptAPI }}
