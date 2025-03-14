@@ -30,18 +30,18 @@ jobs:
     - name: Start MySQL
       uses: mirromutth/mysql-action@v1.1
       with:
-        host port: 3306
-        container port: 3306
-        mysql database: sayup_db
-        mysql root password: "0000"
-        mysql user: root
-        mysql password: "0000"
+        host-port: 3306
+        container-port: 3306
+        mysql-database: sayup_db
+        mysql-root-password: "0000"
+        mysql-user: root
+        mysql-password: "0000"
       
     - name: Wait for MySQL to be ready
       run: |
         echo "Waiting for MySQL to be ready..."
         for i in {1..30}; do
-          if mysqladmin ping -h "127.0.0.1" -u root -p"0000" --silent; then
+          if mysql -h 127.0.0.1 -u root -p"0000" -e "SELECT 1" &>/dev/null; then
             echo "MySQL is ready!"
             exit 0
           fi
