@@ -12,20 +12,12 @@ jobs:
     
     services:
       mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: "0000"
-          MYSQL_DATABASE: "sayup_db"
-          MYSQL_USER: "user"
-          MYSQL_PASSWORD: "0000"
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h localhost -u root -p0000"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --name mysql
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3306
+          container port: 3306
+          mysql database: 'sayup_db'
+          mysql root password: '0000'
     
     steps:
     - name: Checkout code
@@ -48,7 +40,7 @@ jobs:
       run: |
         echo "Waiting for MySQL to be ready..."
         for i in {1..30}; do
-          if mysqladmin ping -h "mysql" -u root -p"0000" --silent; then
+          if mysqladmin ping -h "127.0.0.1" -u root -p"0000" --silent; then
             echo "MySQL is ready!"
             exit 0
           fi
@@ -64,8 +56,8 @@ jobs:
         DB_CONNECTION: mysql
         DB_NAME: sayup_db
         DB_USERNAME: root
-        DB_PASSWORD: 0000
-        DB_HOST: mysql
+        DB_PASSWORD: '0000'
+        DB_HOST: 127.0.0.1
         FILE_UPLOAD_DIR: /tmp/file/temp
         API_KEY: temp
       
