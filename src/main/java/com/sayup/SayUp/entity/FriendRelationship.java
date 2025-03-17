@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
 
+// 현재: FriendRelationship 테이블에서 친구 관련 데이터 모두 저장
+// -> PendingRequest과 Friendship으로 분리
+
 @Entity
 @Table(name = "FriendRelationship")
 @Getter

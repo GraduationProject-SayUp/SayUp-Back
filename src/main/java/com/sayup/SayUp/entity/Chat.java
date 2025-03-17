@@ -5,21 +5,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "UserVoice")
+@Table(name = "Chat")
 @Getter
 @Setter
-public class UserVoice {
+public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long chatId;
 
     @OneToOne
     @JoinColumn(name = "userId", nullable = false, unique = true)
     private User user;
-
-    @Column(nullable = false)
-    private String fileName;
-
-    @Column(nullable = false)
-    private String filePath;
 }

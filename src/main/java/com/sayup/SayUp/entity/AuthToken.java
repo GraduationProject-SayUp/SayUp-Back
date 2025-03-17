@@ -5,10 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "UserVoice")
+@Table(name = "AutoToken")
 @Getter
 @Setter
-public class UserVoice {
+public class AuthToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,9 +17,6 @@ public class UserVoice {
     @JoinColumn(name = "userId", nullable = false, unique = true)
     private User user;
 
-    @Column(nullable = false)
-    private String fileName;
-
-    @Column(nullable = false)
-    private String filePath;
+    @Column(nullable = false, unique = true)
+    private String token;
 }
