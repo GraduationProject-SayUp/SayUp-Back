@@ -28,7 +28,7 @@ services:
       DB_CONNECTION: "mysql"
       DB_NAME: "sayup_db"
       DB_USERNAME: "root"
-      DB_PASSWORD: "0000"
+      DB_PASSWORD: "${DB_PASSWORD}"
       # 경로 변경 필요
       FILE_UPLOAD_DIR: "tmp/file/userVoice"
       API_KEY: "${CHATGPT_API_KEY}"
