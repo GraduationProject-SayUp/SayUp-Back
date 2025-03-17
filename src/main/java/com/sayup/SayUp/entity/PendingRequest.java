@@ -22,11 +22,11 @@ public class PendingRequest {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = false)
+    @JoinColumn(name = "requesterId", nullable = false)
     private User requester;
 
     @ManyToOne
-    @JoinColumn(name = "receiver_id", nullable = false)
+    @JoinColumn(name = "receiverId", nullable = false)
     private User receiver;
 
     public enum Status {

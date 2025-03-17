@@ -1,18 +1,12 @@
 package com.sayup.SayUp.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Objects;
 
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Users")
@@ -33,6 +27,9 @@ public class User {
 
     @Lob
     private String ttsVector;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Override
     public boolean equals(Object obj) {

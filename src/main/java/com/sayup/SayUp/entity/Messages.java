@@ -16,13 +16,13 @@ public class Messages {
     private Long messageId;
 
     @ManyToOne
-    @JoinColumn(name = "chat_id", nullable = false)
+    @JoinColumn(name = "chatId", nullable = false, unique = true)
     private Chat chat;
 
     @Enumerated(EnumType.STRING)
     private Sender sender;
 
-    @Column(name = "cntent", length = 255)
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private Float similarityScore;

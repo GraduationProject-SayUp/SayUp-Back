@@ -19,10 +19,10 @@ public class Friendship {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "user1_id", nullable = false)
+    @JoinColumn(name = "user1Id", nullable = false)
     private User user1;
 
     @ManyToOne
-    @JoinColumn(name = "user2_id", nullable = false)
+    @JoinColumn(name = "user2Id", nullable = false)
     private User user2;
 }

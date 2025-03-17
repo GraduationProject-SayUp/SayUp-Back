@@ -14,7 +14,7 @@ public class UserVoice {
     private Long id;
 
     @OneToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "userId", nullable = false, unique = true)
     private User user;
 
     @Column(nullable = false)
