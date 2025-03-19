@@ -28,7 +28,6 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody @Valid UserDTO userDTO) {
-        logger.info("Register attempt with email: {}", userDTO.getEmail());
         try {
             authService.register(userDTO);
             return ResponseEntity.ok("User registered successfully!");
@@ -45,7 +44,6 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
-        logger.info("Login attempt with email: {}", authRequestDTO.getEmail());
         try {
             AuthResponseDTO response = authService.login(authRequestDTO);
             return ResponseEntity.ok(response);
@@ -76,7 +74,6 @@ public class AuthController {
 
         // 토큰 블랙리스트에 추가
         authService.invalidateToken(token);
-        logger.info("Token invalidated successfully: {}", token);
         return ResponseEntity.ok("Logout successful");
     }
 }

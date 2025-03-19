@@ -37,7 +37,6 @@ public class FriendshipController {
         }
 
         CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
-        logger.info("Sending friend request: User ID = {}, Email = {}", customUserDetails.getUserId(), customUserDetails.getUsername());
 
         try {
             friendshipService.sendFriendRequest(customUserDetails, addresseeId);

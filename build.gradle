@@ -67,6 +67,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// AOP
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
 }
 
 tasks.named('test') {

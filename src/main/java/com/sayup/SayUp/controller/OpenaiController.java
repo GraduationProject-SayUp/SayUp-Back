@@ -18,8 +18,6 @@ public class OpenaiController {
     private final OpenaiService openAIService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    private static final Logger logger = LoggerFactory.getLogger(UserTTSVectorController.class);
-
     @Autowired
     public OpenaiController(OpenaiService openAIService, JwtTokenProvider jwtTokenProvider) {
         this.openAIService = openAIService;
@@ -32,9 +30,6 @@ public class OpenaiController {
     public ResponseEntity<String> generateChatResponse(
             @RequestHeader("Authorization") String token,
             @RequestBody String userMessage) {
-
-        logger.info("Received Token: " + token);
-
 
         // 토큰 값 검증
         if (token.startsWith("Bearer ")) {

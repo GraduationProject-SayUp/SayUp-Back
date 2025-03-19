@@ -34,7 +34,6 @@ public class UserAudioUploadController {
 
         try {
             ResponseEntity<String> response = userVoiceService.uploadFile(token, file);
-            logger.info("File upload completed successfully.");
             return response;
         } catch (Exception e) {
             logger.error("Error occurred while uploading file.", e);

@@ -42,7 +42,6 @@ public class UserTTSVectorController {
                 user.setTtsVector(ttsVector);
                 userRepository.save(user);
 
-                logger.info("TTS Vector successfully saved for user: {}", email);
             } catch (Exception ex) {
                 logger.error("Error saving TTS Vector", ex);
             }
@@ -55,7 +54,6 @@ public class UserTTSVectorController {
             @RequestBody Map<String, String> body) {
 
         String ttsVector = body.get("ttsVector");
-        logger.info("Received request to save TTS Vector");
 
         try {
             // JWT 토큰에서 사용자 이메일 추출
