@@ -50,7 +50,7 @@ public class AuthService implements UserDetailsService {
 
     /**
      * 회원가입 로직
-     * @param userDto 회원가입 요청 DTO
+     * @param authRequestDTO 회원가입 요청 DTO
      */
     public void register(AuthRequestDTO authRequestDTO) {
         userRepository.findByEmail(authRequestDTO.getEmail()).ifPresent(user -> {
