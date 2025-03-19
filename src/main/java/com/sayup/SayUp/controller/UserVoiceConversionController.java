@@ -5,6 +5,7 @@ import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import com.sayup.SayUp.service.UserVoiceService;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+// 서비스로 분리해야 할 것 같은데 일단 보류 ...
 
 @RestController
 @RequestMapping("/api/voice/conversion")
@@ -111,7 +114,6 @@ public class UserVoiceConversionController {
             }
 
         } catch (Exception ex) {
-            logger.error("Voice conversion request failed.", ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "status", "error",
                     "message", "Voice conversion request failed."

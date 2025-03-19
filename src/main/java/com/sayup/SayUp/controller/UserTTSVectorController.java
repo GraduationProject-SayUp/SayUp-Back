@@ -3,6 +3,7 @@ package com.sayup.SayUp.controller;
 import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,15 +17,10 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/users/tts")
+@AllArgsConstructor
 public class UserTTSVectorController {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
-
-    public UserTTSVectorController(JwtTokenProvider jwtTokenProvider,
-                                   UserRepository userRepository) {
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.userRepository = userRepository;
-    }
 
     @Async
     public CompletableFuture<Void> processAndSaveTTSVector(String email, String ttsVector) {

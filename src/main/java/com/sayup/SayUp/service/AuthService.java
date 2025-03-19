@@ -3,7 +3,6 @@ package com.sayup.SayUp.service;
 import com.sayup.SayUp.controller.AuthController;
 import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.dto.UserDTO;
 import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.CustomUserDetails;
@@ -53,18 +52,18 @@ public class AuthService implements UserDetailsService {
      * 회원가입 로직
      * @param userDto 회원가입 요청 DTO
      */
-    public void register(UserDTO userDto) {
-        userRepository.findByEmail(userDto.getEmail()).ifPresent(user -> {
-            logger.info("Registration attempt failed: Email already exists - {}", userDto.getEmail());
+    public void register(AuthRequestDTO authRequestDTO) {
+        userRepository.findByEmail(authRequestDTO.getEmail()).ifPresent(user -> {
+            logger.info("Registration attempt failed: Email already exists - {}", authRequestDTO.getEmail());
             throw new IllegalArgumentException("The email address is already in use. Please try another one.");
         });
 
         User user = new User();
-        user.setEmail(userDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userDto.getPassword())); // 비밀번호 암호화
+        user.setEmail(authRequestDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(authRequestDTO.getPassword())); // 비밀번호 암호화
 
         userRepository.save(user);
-        logger.info("User registered successfully with email: {}", userDto.getEmail());
+        logger.info("User registered successfully with email: {}", authRequestDTO.getEmail());
     }
 
     /**

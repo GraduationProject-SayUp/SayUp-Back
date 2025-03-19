@@ -2,7 +2,6 @@ package com.sayup.SayUp.controller;
 
 import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.dto.UserDTO;
 import com.sayup.SayUp.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,12 +19,12 @@ public class AuthController {
 
     /**
      * 사용자 회원가입 처리
-     * @param userDTO 사용자 이메일 및 비밀번호 정보
+     * @param authRequestDTO 사용자 이메일 및 비밀번호 정보
      * @return 회원가입 성공 또는 실패 메시지
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Valid UserDTO userDTO) {
-        authService.register(userDTO);
+    public ResponseEntity<String> register(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
+        authService.register(authRequestDTO);
         return ResponseEntity.ok("User registered successfully!");
     }
 

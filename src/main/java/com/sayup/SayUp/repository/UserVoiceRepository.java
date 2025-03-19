@@ -8,5 +8,4 @@ import java.util.Optional;
 
 public interface UserVoiceRepository extends JpaRepository<UserVoice,Long> {
     Optional<UserVoice> findByUser(User user);
-
 }

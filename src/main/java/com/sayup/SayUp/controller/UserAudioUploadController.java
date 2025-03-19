@@ -2,6 +2,7 @@ package com.sayup.SayUp.controller;
 
 import com.sayup.SayUp.repository.UserVoiceRepository;
 import com.sayup.SayUp.service.UserVoiceService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,12 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users/audio")
+@AllArgsConstructor
 public class UserAudioUploadController {
     private final UserVoiceService userVoiceService;
-
-    public UserAudioUploadController(UserVoiceService userVoiceService, UserVoiceRepository userVoiceRepository) {
-        this.userVoiceService = userVoiceService;
-    }
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<String> uploadFile(@RequestHeader("Authorization") String token, @RequestParam("file")MultipartFile file){
