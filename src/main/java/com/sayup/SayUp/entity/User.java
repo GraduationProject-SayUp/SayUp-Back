@@ -1,6 +1,7 @@
 package com.sayup.SayUp.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,6 +14,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class User {
+    public User() {
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
@@ -30,6 +34,8 @@ public class User {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private String role;
 
     @Override
     public boolean equals(Object obj) {

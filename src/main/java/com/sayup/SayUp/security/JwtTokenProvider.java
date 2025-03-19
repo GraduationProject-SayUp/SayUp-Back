@@ -52,6 +52,19 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String createTokenFromEmail(String email) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + validityInMilliseconds);
+
+        return Jwts.builder()
+                .setSubject(email)  // 이메일을 subject로 설정
+                .claim("roles", "ROLE_USER")  // 기본 권한 설정 (필요하면 변경)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     /**
      * JWT 토큰 유효성 검증
      * @param token 검증할 JWT 토큰
