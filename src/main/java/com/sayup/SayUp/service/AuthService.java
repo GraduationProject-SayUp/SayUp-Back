@@ -66,6 +66,15 @@ public class AuthService implements UserDetailsService {
         logger.info("User registered successfully with email: {}", authRequestDTO.getEmail());
     }
 
+    // 카카오 로그인 시 사용자 자동 등록
+    public void loadOrCreateUser(String email) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode("kakao_user")); // // OAuth 사용자는 비밀번호를 따로 설정하지 않음
+
+        userRepository.save(user);
+    }
+
     /**
      * Spring Security UserDetailsService 구현
      * @param email 사용자 이메일
@@ -106,6 +115,8 @@ public class AuthService implements UserDetailsService {
         logger.info("Login successful for email: {}", authRequestDTO.getEmail());
         return new AuthResponseDTO(jwt, authRequestDTO.getEmail());
     }
+
+
 
     /**
      * 토큰을 블랙리스트에 추가

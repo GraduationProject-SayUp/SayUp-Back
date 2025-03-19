@@ -37,7 +37,8 @@ public class SecurityConfig {
         final String[] PUBLIC_URLS = {
                 "/api/auth/**",      // 인증 관련 API
                 "/swagger-ui/**",    // Swagger UI
-                "/v3/api-docs/**"    // OpenAPI 문서
+                "/v3/api-docs/**",   // OpenAPI 문서
+                "/callback/**"       // 카카오 로그인
         };
 
         return http
