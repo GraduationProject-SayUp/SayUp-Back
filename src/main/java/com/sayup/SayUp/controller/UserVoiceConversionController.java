@@ -44,8 +44,6 @@ public class UserVoiceConversionController {
             @RequestHeader("Authorization") String token,
             @RequestBody Map<String, String> requestBody) {
 
-        logger.info("Voice conversion request received.");
-
         try {
             // JWT 토큰에서 사용자 이메일 검증
             String email = jwtTokenProvider.getUsernameFromToken(token.substring(7));

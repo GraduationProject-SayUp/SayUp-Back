@@ -5,8 +5,6 @@ import com.sayup.SayUp.dto.AuthResponseDTO;
 import com.sayup.SayUp.dto.UserDTO;
 import com.sayup.SayUp.service.AuthService;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
 
     public AuthController(AuthService authService) {
@@ -28,13 +25,8 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody @Valid UserDTO userDTO) {
-        try {
-            authService.register(userDTO);
-            return ResponseEntity.ok("User registered successfully!");
-        } catch (Exception ex) {
-            logger.error("Registration failed for email: {}", userDTO.getEmail(), ex);
-            return ResponseEntity.badRequest().body("Registration failed: " + ex.getMessage());
-        }
+        authService.register(userDTO);
+        return ResponseEntity.ok("User registered successfully!");
     }
 
     /**
@@ -44,13 +36,8 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
-        try {
-            AuthResponseDTO response = authService.login(authRequestDTO);
-            return ResponseEntity.ok(response);
-        } catch (Exception ex) {
-            logger.error("Login failed for email: {}", authRequestDTO.getEmail(), ex);
-            return ResponseEntity.badRequest().body(null);
-        }
+        AuthResponseDTO response = authService.login(authRequestDTO);
+        return ResponseEntity.ok(response);
     }
 
     /**
