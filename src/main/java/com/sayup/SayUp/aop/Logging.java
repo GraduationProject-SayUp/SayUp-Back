@@ -57,5 +57,21 @@ public class Logging {
 
         return result;
     }
+
+    // @RestController 또는 @Service 가 붙은 클래스만 AOP 적용
+    @Around("within(@org.springframework.web.bind.annotation.RestController *) || within(@org.springframework.stereotype.Service *)")
+    public Object logExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
+        try {
+            return joinPoint.proceed();
+        } catch (Exception e) {
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            String methodName = signature.getMethod().getName();
+            String className = signature.getDeclaringType().getSimpleName();
+
+            logger.error("Exception in {}.{}() | Error: {}", className, methodName, e.getMessage());
+
+            throw e;  // 예외 다시 던지기 -> Spring이 전역 예외 처리기로 전달 (@ControllerAdvice에서 예외를 핸들링하여 클라이언트에게 적절한 응답을 반환 가능)
+        }
+    }
 }
 

@@ -39,7 +39,6 @@ public class AuthService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider,

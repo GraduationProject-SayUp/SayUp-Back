@@ -25,76 +25,43 @@ public class FriendshipController {
     private static final Logger logger = LoggerFactory.getLogger(FriendshipController.class);
 
     @PostMapping("/request/{addresseeId}")
-    public ResponseEntity<?> sendFriendRequest(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Integer addresseeId) {
+    public ResponseEntity<?> sendFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Integer addresseeId) {
         if (userDetails == null) {
-            logger.warn("Failed to send friend request: User not authenticated");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
         } else if (!(userDetails instanceof CustomUserDetails)) {
             logger.error("UserDetails is not an instance of CustomUserDetails");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
         }
 
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
-
-        try {
-            friendshipService.sendFriendRequest(customUserDetails, addresseeId);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            logger.error("Failed to send friend request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        friendshipService.sendFriendRequest((CustomUserDetails) userDetails, addresseeId);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/accept/{relationshipId}")
-    public ResponseEntity<?> acceptFriendRequest(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long relationshipId) {
+    public ResponseEntity<?> acceptFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long relationshipId) {
         if (userDetails == null) {
-            logger.warn("Failed to accept friend request: User not authenticated");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
-        } else if (!(userDetails instanceof CustomUserDetails)) {
-            logger.error("UserDetails is not an instance of CustomUserDetails");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
         }
 
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
-        try {
-            friendshipService.acceptFriendRequest(customUserDetails, relationshipId);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            logger.error("Failed to accept friend request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        friendshipService.acceptFriendRequest((CustomUserDetails) userDetails, relationshipId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<User>> getFriendsList(
-            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<User>> getFriendsList(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            logger.warn("Failed to get friends list: User not authenticated");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } else if (!(userDetails instanceof CustomUserDetails)) {
-            logger.error("UserDetails is not an instance of CustomUserDetails");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        CustomUserDetails customUserDetails = (CustomUserDetails) userDetails;
-        return ResponseEntity.ok(friendshipService.getFriendsList(customUserDetails));
+        return ResponseEntity.ok(friendshipService.getFriendsList((CustomUserDetails) userDetails));
     }
 
     @GetMapping("/pending")
     public ResponseEntity<List<PendingRequestDTO>> getPendingRequests(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
-            logger.warn("Failed to get pending requests: User not authenticated");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } else if (!(userDetails instanceof CustomUserDetails)) {
-            logger.error("UserDetails is not an instance of CustomUserDetails");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
-        List<PendingRequestDTO> pendingRequests = friendshipService.getPendingRequests(userDetails);
-        return ResponseEntity.ok(pendingRequests);
+        return ResponseEntity.ok(friendshipService.getPendingRequests(userDetails));
     }
 }
