@@ -8,7 +8,6 @@ import lombok.Getter;
 @Builder
 @Getter
 public class KakaoLoginDto {
-
     public String accessToken;
     public String refreshToken;
 }

@@ -19,9 +19,9 @@ import reactor.core.publisher.Mono;
 @Service
 public class KakaoService {
 
-    private String clientId;
-    private final String KAUTH_TOKEN_URL_HOST ;
-    private final String KAUTH_USER_URL_HOST;
+    private String clientId;  // 카카오 개발자 콘솔에서 발급
+    private final String KAUTH_TOKEN_URL_HOST;  // 토큰 발급 서버
+    private final String KAUTH_USER_URL_HOST;  // 사용자 정보 API 서버
 
     @Autowired
     public KakaoService(@Value("${kakao.client_id}") String clientId) {
@@ -30,6 +30,9 @@ public class KakaoService {
         KAUTH_USER_URL_HOST = "https://kapi.kakao.com";
     }
 
+    /**
+     * 실제 인증 요청에 사용할 Access Token 반환
+     */
     public String getAccessTokenFromKakao(String code) {
 
         KakaoTokenResponseDto kakaoTokenResponseDto = WebClient.create(KAUTH_TOKEN_URL_HOST).post()
@@ -59,8 +62,9 @@ public class KakaoService {
     }
 
 
-
-
+    /**
+     * Access Token을 사용해 로그인한 카카오 사용자 정보를 가져옴
+     */
     public KakaoUserInfoResponseDto getUserInfo(String accessToken) {
 
         KakaoUserInfoResponseDto userInfo = WebClient.create(KAUTH_USER_URL_HOST)

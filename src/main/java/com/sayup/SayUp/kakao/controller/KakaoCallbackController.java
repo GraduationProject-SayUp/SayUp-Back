@@ -18,8 +18,8 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("")
-public class KakaoLoginController {
+@RequestMapping("/api/auth/kakao")
+public class KakaoCallbackController {
 
     private final KakaoService kakaoService;
     private final JwtTokenProvider jwtTokenProvider;
