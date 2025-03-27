@@ -2,9 +2,10 @@ package com.sayup.SayUp.kakao.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,16 +20,13 @@ public class KakaoRedirectController {
 
     @GetMapping("/login-url")
     public ResponseEntity<Void> redirectToKakaoLogin() {
-        String kakaoLoginUrl = "https://kauth.kakao.com/oauth/authorize"
-                + "?response_type=code"
-                + "&client_id=" + clientId
-                + "&redirect_uri=" + redirectUri;
+        String kakaoLoginUrl = String.format(
+                "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=%s&redirect_uri=%s",
+                clientId, redirectUri
+        );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", kakaoLoginUrl);
-
-        return ResponseEntity.status(302) // HTTP 302 Found (Redirect)
-                .headers(headers)
+        return ResponseEntity.status(302)
+                .location(URI.create(kakaoLoginUrl))
                 .build();
     }
 }

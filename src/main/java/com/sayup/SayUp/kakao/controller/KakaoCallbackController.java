@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -26,18 +24,17 @@ public class KakaoCallbackController {
     private final AuthService authService;
 
     @GetMapping("/callback")
-    public ResponseEntity<?> callback(@RequestParam("code") String code) throws IOException {
+    public ResponseEntity<AuthResponseDTO> callback(@RequestParam("code") String code) {
         String accessToken = kakaoService.getAccessTokenFromKakao(code);
-
         KakaoUserInfoResponseDto userInfo = kakaoService.getUserInfo(accessToken);
 
-        String email = null;
-        String jwt = null;
-        if (userInfo.getKakaoAccount() != null) {
-            email = userInfo.getKakaoAccount().getEmail();
-            authService.loadOrCreateUser(email);
-            jwt = jwtTokenProvider.createTokenFromEmail(email);
+        if (userInfo.getKakaoAccount() == null || userInfo.getKakaoAccount().getEmail() == null) {
+            return ResponseEntity.badRequest().body(new AuthResponseDTO(null, null));
         }
+
+        String email = userInfo.getKakaoAccount().getEmail();
+        authService.loadOrCreateUser(email);
+        String jwt = jwtTokenProvider.createTokenFromEmail(email);
 
         return ResponseEntity.ok(new AuthResponseDTO(jwt, email));
     }
