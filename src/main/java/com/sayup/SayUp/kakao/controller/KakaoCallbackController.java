@@ -1,6 +1,7 @@
 package com.sayup.SayUp.kakao.controller;
 
 import com.sayup.SayUp.dto.AuthResponseDTO;
+import com.sayup.SayUp.entity.User;
 import com.sayup.SayUp.kakao.dto.KakaoUserInfoResponseDto;
 import com.sayup.SayUp.kakao.service.KakaoService;
 import com.sayup.SayUp.security.JwtTokenProvider;
@@ -26,16 +27,18 @@ public class KakaoCallbackController {
     @GetMapping("/callback")
     public ResponseEntity<AuthResponseDTO> callback(@RequestParam("code") String code) {
         String accessToken = kakaoService.getAccessTokenFromKakao(code);
+
         KakaoUserInfoResponseDto userInfo = kakaoService.getUserInfo(accessToken);
 
         if (userInfo.getKakaoAccount() == null || userInfo.getKakaoAccount().getEmail() == null) {
-            return ResponseEntity.badRequest().body(new AuthResponseDTO(null, null));
+            return ResponseEntity.badRequest().body(new AuthResponseDTO(null, null, null));
         }
 
         String email = userInfo.getKakaoAccount().getEmail();
-        authService.loadOrCreateUser(email);
+        User user = authService.loadOrCreateUser(email);
         String jwt = jwtTokenProvider.createTokenFromEmail(email);
 
-        return ResponseEntity.ok(new AuthResponseDTO(jwt, email));
+        AuthResponseDTO response = new AuthResponseDTO(jwt, email, String.valueOf(user.getUserId()));
+        return ResponseEntity.ok(response);
     }
 }
