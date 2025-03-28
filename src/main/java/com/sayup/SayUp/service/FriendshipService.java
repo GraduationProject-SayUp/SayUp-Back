@@ -33,7 +33,7 @@ public class FriendshipService {
      * @param addresseeId: 친구 요청을 받을 사용자의 userId
      */
     @Transactional
-    public void sendFriendRequest(CustomUserDetails requesterDetails, Integer addresseeId) {
+    public void sendFriendRequest(CustomUserDetails requesterDetails, Long addresseeId) {
         User requester = requesterDetails.getUser(); // User 객체 직접 접근
         User addressee = userRepository.findById(addresseeId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
