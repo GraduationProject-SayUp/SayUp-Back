@@ -67,12 +67,17 @@ public class AuthService implements UserDetailsService {
     }
 
     // 카카오 로그인 시 사용자 자동 등록
-    public void loadOrCreateUser(String email) {
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode("kakao_user")); // // OAuth 사용자는 비밀번호를 따로 설정하지 않음
+    public User loadOrCreateUser(String email) {
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    User user = new User();
+                    user.setEmail(email);
+                    user.setPassword(passwordEncoder.encode("kakao_user")); // OAuth 사용자는 임시 비밀번호
 
-        userRepository.save(user);
+                    user.setRole("USER"); // 기본 역할 설정
+
+                    return userRepository.save(user);
+                });
     }
 
     /**
@@ -112,8 +117,12 @@ public class AuthService implements UserDetailsService {
 
         String jwt = jwtTokenProvider.createToken(authentication);
 
+        User user = userRepository.findByEmail(authRequestDTO.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         logger.info("Login successful for email: {}", authRequestDTO.getEmail());
-        return new AuthResponseDTO(jwt, authRequestDTO.getEmail());
+
+        return new AuthResponseDTO(jwt, authRequestDTO.getEmail(), String.valueOf(user.getUserId()));
     }
 
 

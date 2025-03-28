@@ -22,7 +22,7 @@ public class FriendshipController {
     private final FriendshipService friendshipService;
 
     @PostMapping("/request/{addresseeId}")
-    public ResponseEntity<?> sendFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Integer addresseeId) {
+    public ResponseEntity<?> sendFriendRequest(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long addresseeId) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
         }

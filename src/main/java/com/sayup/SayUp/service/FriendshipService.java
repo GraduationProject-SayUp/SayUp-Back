@@ -29,8 +29,11 @@ public class FriendshipService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * @param addresseeId: 친구 요청을 받을 사용자의 userId
+     */
     @Transactional
-    public void sendFriendRequest(CustomUserDetails requesterDetails, Integer addresseeId) {
+    public void sendFriendRequest(CustomUserDetails requesterDetails, Long addresseeId) {
         User requester = requesterDetails.getUser(); // User 객체 직접 접근
         User addressee = userRepository.findById(addresseeId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -65,6 +68,17 @@ public class FriendshipService {
         friendshipRepository.save(relationship);
     }
 
+    /**
+     * 전체 흐름 정리
+     * 1. A 유저가 B에게 친구 요청 
+     *    서버에서 FriendRelationship 생성 -> relationshipId 생성
+     * 2. B 유저가 getPendingRequests() API 호출
+     *    B를 향한 PENDING 상태의 요청들을 조회
+     *    각 요청마다 relationshipId + 요청자 정보 반환
+     * 3. B 유저가 특정 요청을 수락
+     *    /friend/accept API 호출 시 relationshipId 전달
+     *    서버에서 해당 요청의 상태를 ACCEPTED로 변경
+     */
     @Transactional
     public void acceptFriendRequest(CustomUserDetails addresseeDetails, Long relationshipId) {
         User addressee = addresseeDetails.getUser();
