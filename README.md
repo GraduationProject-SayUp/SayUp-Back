@@ -33,6 +33,7 @@
 **1. 실행 전 설정**
 
 - `.env` 또는 `application.yml`에 다음 항목 입력
+  
   - DB 정보
   - Kakao REST API Key
   - OpenAI API Key
