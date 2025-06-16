@@ -17,7 +17,6 @@ gradlew.bat
 
 # Documentation
 README.md
-ENVIRONMENT_VARIABLES.md
 *.md
 
 # Environment files
