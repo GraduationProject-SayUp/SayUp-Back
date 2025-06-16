@@ -11,8 +11,6 @@
 # Build outputs
 build/
 .gradle/
-gradle/
-gradlew
 gradlew.bat
 
 # Documentation
