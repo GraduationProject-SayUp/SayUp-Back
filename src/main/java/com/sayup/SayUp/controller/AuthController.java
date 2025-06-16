@@ -4,60 +4,102 @@ import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
 import com.sayup.SayUp.service.AuthService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
+    
     private final AuthService authService;
 
     /**
      * 사용자 회원가입 처리
-     * @param authRequestDTO 사용자 이메일 및 비밀번호 정보
-     * @return 회원가입 성공 또는 실패 메시지
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
-        authService.register(authRequestDTO);
-        return ResponseEntity.ok("User registered successfully!");
+    public ResponseEntity<AuthResponseDTO> register(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
+        log.info("Registration attempt for email: {}", authRequestDTO.getEmail());
+        
+        AuthResponseDTO response = authService.register(authRequestDTO);
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
      * 사용자 로그인 처리
-     * @param authRequestDTO 사용자의 이메일 및 비밀번호
-     * @return JWT 토큰 및 사용자 정보
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequestDTO authRequestDTO) {
+        log.info("Login attempt for email: {}", authRequestDTO.getEmail());
+        
         AuthResponseDTO response = authService.login(authRequestDTO);
+        
         return ResponseEntity.ok(response);
     }
 
     /**
-     * 로그아웃 엔드포인트
-     * @param token 클라이언트가 전달한 JWT
-     * @return 성공 여부
+     * 토큰 refresh
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponseDTO> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        
+        if (refreshToken == null || refreshToken.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        AuthResponseDTO response = authService.refreshToken(refreshToken);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 로그아웃 처리
      */
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String token) {
-        if (token == null || token.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Authorization header is missing or empty");
+    public ResponseEntity<Map<String, String>> logout(@RequestHeader("Authorization") String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Invalid authorization header"));
         }
 
-        // "Bearer " 제거 후 토큰 추출
-        token = token.substring(7);
+        String actualToken = token.substring(7);
+        
+        try {
+            authService.logout(actualToken);
+            return ResponseEntity.ok(Map.of("message", "Logout successful"));
+        } catch (Exception e) {
+            log.error("Logout failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 
-        // 이미 블랙리스트에 있는지 확인
-        if (authService.isTokenBlacklisted(token)) {
-            return ResponseEntity.badRequest().body("Token is already invalidated.");
+    /**
+     * 토큰 유효성 검증
+     */
+    @GetMapping("/validate")
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "error", "Invalid authorization header"));
         }
 
-        // 토큰 블랙리스트에 추가
-        authService.invalidateToken(token);
-        return ResponseEntity.ok("Logout successful");
+        String actualToken = token.substring(7);
+        
+        try {
+            boolean isValid = !authService.isTokenBlacklisted(actualToken);
+            return ResponseEntity.ok(Map.of("valid", isValid));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "error", e.getMessage()));
+        }
     }
 }
