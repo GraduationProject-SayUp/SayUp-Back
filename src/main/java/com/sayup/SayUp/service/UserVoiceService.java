@@ -6,12 +6,12 @@ import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.repository.UserVoiceRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -24,10 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserVoiceService {
-    private static final Logger logger = LoggerFactory.getLogger(UserVoiceService.class);
 
     private final UserVoiceRepository userVoiceRepository;
     private final UserRepository userRepository;
@@ -42,27 +42,55 @@ public class UserVoiceService {
 
     public ResponseEntity<String> uploadFile(String token, MultipartFile file) {
         try {
-            if (file.isEmpty()) {
-                logger.warn("Upload failed: No file attached.");
-                return ResponseEntity.badRequest().body("File is empty");
+            // 입력 검증
+            if (token == null || !token.startsWith("Bearer ")) {
+                log.warn("Invalid authorization header format");
+                return ResponseEntity.badRequest().body("Invalid authorization header format");
+            }
+
+            if (file == null || file.isEmpty()) {
+                log.warn("Upload failed: No file attached or file is empty");
+                return ResponseEntity.badRequest().body("File is required and cannot be empty");
             }
 
             // JWT 토큰에서 이메일 추출
-            String email = jwtTokenProvider.getUsernameFromToken(token.substring(7));
+            String actualToken = token.substring(7);
+            if (!jwtTokenProvider.validateToken(actualToken)) {
+                log.warn("Invalid or expired token during file upload");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
+            }
+
+            String email = jwtTokenProvider.getUsernameFromToken(actualToken);
+            if (email == null || email.trim().isEmpty()) {
+                log.warn("Invalid email from token during file upload");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token content");
+            }
+
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+            // 사용자 활성 상태 확인
+            if (!user.getIsActive()) {
+                log.warn("Inactive user attempted file upload: {}", email);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is not active");
+            }
 
             // 파일 저장
             String originalFileName = file.getOriginalFilename();
+            if (originalFileName == null || originalFileName.trim().isEmpty()) {
+                log.warn("Invalid file name provided");
+                return ResponseEntity.badRequest().body("Invalid file name");
+            }
+
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
-                logger.info("Upload directory created at: {}", uploadPath);
+                log.info("Upload directory created at: {}", uploadPath);
             }
 
             Path destination = Paths.get(uploadDir, originalFileName);
             file.transferTo(destination.toFile());
-            logger.info("File saved at: {}", destination);
+            log.info("File saved at: {} for user: {}", destination, email);
 
             // 기존 UserVoice 확인
             UserVoice userVoice = userVoiceRepository.findByUser(user)
@@ -74,17 +102,21 @@ public class UserVoiceService {
             userVoice.setFilePath(destination.toString());
             userVoiceRepository.save(userVoice);
 
-            logger.info("File information saved to DB for user: {}", email);
+            log.info("File information saved to DB for user: {}", email);
+            
             // 비동기로 파이썬 서버 호출
             processFileAsync(token, destination.toString(), user);
 
             return ResponseEntity.ok("File upload successful");
+        } catch (UsernameNotFoundException e) {
+            log.error("User not found during file upload: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         } catch (IOException e) {
-            logger.error("Error saving file", e);
-            return ResponseEntity.internalServerError().body("File save failed: " + e.getMessage());
+            log.error("Error saving file: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File save failed: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Unexpected error occurred", e);
-            return ResponseEntity.internalServerError().body("Unexpected error: " + e.getMessage());
+            log.error("Unexpected error occurred during file upload: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error: " + e.getMessage());
         }
     }
 
@@ -94,11 +126,9 @@ public class UserVoiceService {
             try {
                 // 파이썬 서버 호출
                 String pythonResponse = sendToPythonServer(token, filePath);
-
-                logger.info("Python server response: {}", pythonResponse);
-
+                log.info("Python server response for user {}: {}", user.getEmail(), pythonResponse);
             } catch (Exception e) {
-                logger.error("Error processing file asynchronously", e);
+                log.error("Error processing file asynchronously for user {}: {}", user.getEmail(), e.getMessage());
             }
         });
     }
@@ -122,15 +152,15 @@ public class UserVoiceService {
             ResponseEntity<String> response = restTemplate.postForEntity(pythonEndpoint, requestEntity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                logger.info("Python server response received successfully.");
+                log.info("Python server response received successfully");
                 return response.getBody();
             } else {
-                logger.warn("Python server returned non-200 status: {}", response.getStatusCode());
-                throw new RuntimeException("Python server error: " + response.getStatusCode());
+                log.warn("Python server returned non-200 status: {}", response.getStatusCode());
+                throw new IllegalStateException("Python server error: " + response.getStatusCode());
             }
         } catch (Exception e) {
-            logger.error("Error sending file to Python server", e);
-            throw new RuntimeException("Error sending file to Python server: " + e.getMessage(), e);
+            log.error("Error sending file to Python server: {}", e.getMessage());
+            throw new IllegalStateException("Error sending file to Python server: " + e.getMessage(), e);
         }
     }
 }
