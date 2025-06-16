@@ -35,3 +35,22 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# macOS 시스템 파일
+.DS_Store
+
+# 로그 파일
+*.log
+logs/
+!src/main/resources/logs/
+
+# OS 임시 파일
+*.swp
+*.swo
+*.tmp
+
+# IDE에서 생성하는 실행 설정
+*.launch
+
+# 환경 설정 파일
+.env.dev
