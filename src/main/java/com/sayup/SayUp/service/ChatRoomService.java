@@ -27,7 +27,7 @@ public class ChatRoomService {
 
     /**
      * 두 사용자가 참여하는 채팅방 생성 또는 기존 방 반환
-     * 
+     *
      * @param currentUserId 현재 로그인한 유저의 ID
      * @param friendUserId 친구로 선택한 유저의 ID
      * @return 기존 또는 새로 생성된 채팅방
@@ -71,13 +71,13 @@ public class ChatRoomService {
                 log.debug("TTS vector stored for user: {}", friendUserId);
             }
 
-            String metadataJson = objectMapper.writeValueAsString(metadataMap);
+        String metadataJson = objectMapper.writeValueAsString(metadataMap);
 
-            // 새로운 채팅방 객체 생성 및 저장
-            ChatRoom room = ChatRoom.builder()
-                    .participants(Arrays.asList(currentUser, friendUser))
-                    .metadata(metadataJson)
-                    .build();
+        // 새로운 채팅방 객체 생성 및 저장
+        ChatRoom room = ChatRoom.builder()
+                .participants(Arrays.asList(currentUser, friendUser))
+                .metadata(metadataJson)
+                .build();
 
             ChatRoom savedRoom = chatRoomRepository.save(room);
             log.info("New chat room created: {} between users: {} and {}", 
