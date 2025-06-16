@@ -15,7 +15,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: ☕ Set up JDK 17 with Gradle cache
+      - name: Set up JDK 17 with Gradle cache
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
@@ -52,6 +52,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/sayup:latest
