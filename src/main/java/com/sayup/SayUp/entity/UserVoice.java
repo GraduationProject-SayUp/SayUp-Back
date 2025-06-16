@@ -15,7 +15,7 @@ public class UserVoice {
 
     @OneToOne
     @JoinColumn(name = "userId", nullable = false, unique = true)
-    private User user;
+    private Users user;
 
     @Column(nullable = false)
     private String fileName;

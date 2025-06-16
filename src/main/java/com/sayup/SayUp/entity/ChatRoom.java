@@ -26,7 +26,7 @@ public class ChatRoom {
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private List<User> participants = new ArrayList<>();
+    private List<Users> participants = new ArrayList<>();
 
     @Lob
     private String metadata; // TTS 벡터 등 JSON 문자열로 저장

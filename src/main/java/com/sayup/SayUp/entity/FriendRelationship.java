@@ -1,38 +1,51 @@
 package com.sayup.SayUp.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import java.time.LocalDateTime;
-
-// 현재: FriendRelationship 테이블에서 친구 관련 데이터 모두 저장
-// -> PendingRequest과 Friendship으로 분리
-// -> 일단 보류
 
 @Entity
 @Table(name = "FriendRelationship")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class FriendRelationship {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id", nullable = false)
-    private User requester;
+    private Users requester;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "addressee_id", nullable = false)
-    private User addressee;
+    private Users addressee;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private FriendshipStatus status;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime requestedAt;
 
+    @Column
     private LocalDateTime acceptedAt;
+
+    @Column
+    private LocalDateTime rejectedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (requestedAt == null) {
+            requestedAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = FriendshipStatus.PENDING;
+        }
+    }
 
     public enum FriendshipStatus {
         PENDING,    // 친구 요청이 보내진 상태
