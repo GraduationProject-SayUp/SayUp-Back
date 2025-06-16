@@ -38,7 +38,7 @@ public class FriendshipService {
         }
 
         User requester = requesterDetails.getUser();
-        
+
         // 자기 자신에게 친구 요청을 보내는 것을 방지
         if (requester.getUserId().equals(addresseeId)) {
             log.warn("User {} attempted to send friend request to themselves", requester.getUserId());
@@ -57,7 +57,7 @@ public class FriendshipService {
         log.info("Friend request from user {} to user {}", requester.getUserId(), addresseeId);
 
         // 이미 존재하는 친구 관계 검증
-        Optional<FriendRelationship> existingRelationship = 
+        Optional<FriendRelationship> existingRelationship =
                 friendshipRepository.findRelationship(requester, addressee);
 
         if (existingRelationship.isPresent()) {
@@ -186,7 +186,7 @@ public class FriendshipService {
         log.info("Fetching friends list for user: {}", user.getUserId());
 
         return friendshipRepository.findAllFriends(user).stream()
-                .map(relationship -> 
+                .map(relationship ->
                         relationship.getRequester().getUserId().equals(user.getUserId())
                                 ? relationship.getAddressee()
                                 : relationship.getRequester())
