@@ -45,7 +45,7 @@
 
 ```bash
 ./gradlew build
-java -jar build/libs/sayup-backend.jar
+java -jar build/libs/SayUp-0.0.1-SNAPSHOT.jar
 ```
 
 <br>
