@@ -1,5 +1,6 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/3a566eab-c65a-4f14-b0b3-974e8eb69f0f" alt="SayUp Logo" width="80" />
+  <img src="https://github.com/user-attachments/assets/023d5d2a-23e7-44b6-850b-64c579b69b42" alt="SayUp Logo" width="80" />
+  
   <h1>SayUp - BE</h1>
   <p><strong>🎓 Graduation Project</strong></p>
   <p><em>내 목소리로 배우는 한국어</em></p>
