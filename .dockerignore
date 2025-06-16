@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Build outputs
+build/
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# Documentation
+README.md
+ENVIRONMENT_VARIABLES.md
+*.md
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Test files
+src/test/
+
+# Temporary files
+tmp/
+temp/
