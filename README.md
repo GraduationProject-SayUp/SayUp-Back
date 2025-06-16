@@ -52,7 +52,7 @@ java -jar build/libs/sayup-backend.jar
 
 **3. Docker Compose로 실행**
 ```
-docker-compose up --build
+docker compose --env-file .env.prod up
 ```
 <br>
 
