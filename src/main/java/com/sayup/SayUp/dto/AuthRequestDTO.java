@@ -11,13 +11,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthRequestDTO {
-    @NotBlank(message = "Email cannot be blank")
-    @Pattern(regexp="^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])+[.][a-zA-Z]{2,3}$", message="이메일 주소 양식을 확인해주세요")
+    @NotBlank(message = "이메일을 입력해주세요")
+    @Pattern(
+        regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", 
+        message = "올바른 이메일 형식을 입력해주세요"
+    )
     private String email;
 
-    @NotBlank(message = "Password cannot be blank")
-    @Size(min = 4, message = "Password must be at least 4 characters long")
+    @NotBlank(message = "비밀번호를 입력해주세요")
+    @Size(min = 8, max = 100, message = "비밀번호는 8자 이상 100자 이하여야 합니다")
+    @Pattern(
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&].*$",
+        message = "비밀번호는 대문자, 소문자, 숫자, 특수문자를 포함해야 합니다"
+    )
     private String password;
 }
-
-

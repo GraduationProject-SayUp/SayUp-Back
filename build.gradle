@@ -31,6 +31,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:mysql:1.20.0'
+	testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -55,7 +56,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
 	// Swagger 3 (SpringDoc OpenAPI) 의존성
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
 	// ClassGraph 버전 명시
 	implementation 'io.github.classgraph:classgraph:4.8.149'
@@ -74,7 +75,11 @@ dependencies {
 	// AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	// Redis 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 tasks.named('test') {

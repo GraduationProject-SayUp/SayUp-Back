@@ -10,24 +10,35 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)  // JSON에서 이 클래스에 정의되지 않은 필드가 있어도 무시
 public class KakaoTokenResponseDto {
 
-    @JsonProperty("token_type")
-    public String tokenType;
-
     @JsonProperty("access_token")
-    public String accessToken;
-
-    @JsonProperty("id_token")
-    public String idToken;
-
-    @JsonProperty("expires_in")
-    public Integer expiresIn;
+    private String accessToken;
 
     @JsonProperty("refresh_token")
-    public String refreshToken;
+    private String refreshToken;
+
+    @JsonProperty("expires_in")
+    private Integer expiresIn;
 
     @JsonProperty("refresh_token_expires_in")
-    public Integer refreshTokenExpiresIn;
+    private Integer refreshTokenExpiresIn;
+
+    @JsonProperty("token_type")
+    private String tokenType;
 
     @JsonProperty("scope")
-    public String scope;
+    private String scope;
+
+    /**
+     * 토큰 유효성 검증
+     */
+    public boolean isValid() {
+        return accessToken != null && !accessToken.trim().isEmpty();
+    }
+
+    /**
+     * 리프레시 토큰 유효성 검증
+     */
+    public boolean hasRefreshToken() {
+        return refreshToken != null && !refreshToken.trim().isEmpty();
+    }
 }

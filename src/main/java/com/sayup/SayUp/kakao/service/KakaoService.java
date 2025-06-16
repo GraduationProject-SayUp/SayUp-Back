@@ -2,90 +2,146 @@ package com.sayup.SayUp.kakao.service;
 
 import com.sayup.SayUp.kakao.dto.KakaoTokenResponseDto;
 import com.sayup.SayUp.kakao.dto.KakaoUserInfoResponseDto;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import lombok.RequiredArgsConstructor;
+import com.sayup.SayUp.kakao.exception.KakaoApiException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class KakaoService {
 
-    private String clientId;  // 카카오 개발자 콘솔에서 발급
-    private final String KAUTH_TOKEN_URL_HOST;  // 토큰 발급 서버
-    private final String KAUTH_USER_URL_HOST;  // 사용자 정보 API 서버
+    private static final String KAUTH_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
+    private static final String KAPI_USER_URL = "https://kapi.kakao.com/v2/user/me";
+    private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
-    @Autowired
+    private final String clientId;
+    private final WebClient webClient;
+
     public KakaoService(@Value("${kakao.client_id}") String clientId) {
         this.clientId = clientId;
-        KAUTH_TOKEN_URL_HOST ="https://kauth.kakao.com";
-        KAUTH_USER_URL_HOST = "https://kapi.kakao.com";
+        this.webClient = WebClient.builder()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024)) // 1MB
+                .build();
     }
 
     /**
-     * 실제 인증 요청에 사용할 Access Token 반환
+     * 카카오 인증 코드로 액세스 토큰 발급
      */
-    public String getAccessTokenFromKakao(String code) {
+    public KakaoTokenResponseDto getAccessToken(String code) {
+        validateCode(code);
 
-        KakaoTokenResponseDto kakaoTokenResponseDto = WebClient.create(KAUTH_TOKEN_URL_HOST).post()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("https")
-                        .path("/oauth/token")
-                        .queryParam("grant_type", "authorization_code")
-                        .queryParam("client_id", clientId)
-                        .queryParam("code", code)
-                        .build(true))
-                .header(HttpHeaders.CONTENT_TYPE, HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
-                .retrieve()
-                //TODO : Custom Exception
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> Mono.error(new RuntimeException("Invalid Parameter")))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> Mono.error(new RuntimeException("Internal Server Error")))
-                .bodyToMono(KakaoTokenResponseDto.class)
-                .block();
+        try {
+            log.info("Requesting Kakao access token with code: {}...", 
+                    StringUtils.truncate(code, 10));
 
+            KakaoTokenResponseDto response = webClient.post()
+                    .uri(KAUTH_TOKEN_URL)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                    .bodyValue(buildTokenRequest(code))
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, 
+                            this::handleClientError)
+                    .onStatus(HttpStatusCode::is5xxServerError, 
+                            this::handleServerError)
+                    .bodyToMono(KakaoTokenResponseDto.class)
+                    .timeout(TIMEOUT)
+                    .block();
 
-        log.info(" [Kakao Service] Access Token ------> {}", kakaoTokenResponseDto.getAccessToken());
-        log.info(" [Kakao Service] Refresh Token ------> {}", kakaoTokenResponseDto.getRefreshToken());
-        //제공 조건: OpenID Connect가 활성화 된 앱의 토큰 발급 요청인 경우 또는 scope에 openid를 포함한 추가 항목 동의 받기 요청을 거친 토큰 발급 요청인 경우
-        log.info(" [Kakao Service] Id Token ------> {}", kakaoTokenResponseDto.getIdToken());
-        log.info(" [Kakao Service] Scope ------> {}", kakaoTokenResponseDto.getScope());
+            validateTokenResponse(response);
+            log.info("Kakao access token obtained successfully");
+            return response;
 
-        return kakaoTokenResponseDto.getAccessToken();
+        } catch (Exception e) {
+            log.error("Error obtaining Kakao access token: {}", e.getMessage());
+            throw new KakaoApiException("Failed to authenticate with Kakao: " + e.getMessage());
+        }
     }
 
-
     /**
-     * Access Token을 사용해 로그인한 카카오 사용자 정보를 가져옴
+     * 액세스 토큰으로 카카오 사용자 정보 조회
      */
     public KakaoUserInfoResponseDto getUserInfo(String accessToken) {
+        validateAccessToken(accessToken);
 
-        KakaoUserInfoResponseDto userInfo = WebClient.create(KAUTH_USER_URL_HOST)
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("https")
-                        .path("/v2/user/me")
-                        .build(true))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken) // access token 인가
-                .header(HttpHeaders.CONTENT_TYPE, HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
-                .retrieve()
-                //TODO : Custom Exception
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> Mono.error(new RuntimeException("Invalid Parameter")))
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> Mono.error(new RuntimeException("Internal Server Error")))
-                .bodyToMono(KakaoUserInfoResponseDto.class)
-                .block();
+        try {
+            log.info("Requesting Kakao user info");
 
-        log.info("[ Kakao Service ] Auth ID ---> {} ", userInfo.getId());
-        log.info("[ Kakao Service ] NickName ---> {} ", userInfo.getKakaoAccount().getProfile().getNickName());
-        log.info("[ Kakao Service ] ProfileImageUrl ---> {} ", userInfo.getKakaoAccount().getProfile().getProfileImageUrl());
+            KakaoUserInfoResponseDto response = webClient.get()
+                    .uri(KAPI_USER_URL)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, 
+                            this::handleClientError)
+                    .onStatus(HttpStatusCode::is5xxServerError, 
+                            this::handleServerError)
+                    .bodyToMono(KakaoUserInfoResponseDto.class)
+                    .timeout(TIMEOUT)
+                    .block();
 
-        return userInfo;
+            validateUserInfoResponse(response);
+            log.info("Kakao user info obtained successfully for user ID: {}", response.getId());
+            return response;
+
+        } catch (Exception e) {
+            log.error("Error obtaining Kakao user info: {}", e.getMessage());
+            throw new KakaoApiException("Failed to get user info from Kakao: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 카카오 로그인 처리 (토큰 발급 + 사용자 정보 조회)
+     */
+    public KakaoUserInfoResponseDto processKakaoLogin(String code) {
+        KakaoTokenResponseDto tokenResponse = getAccessToken(code);
+        return getUserInfo(tokenResponse.getAccessToken());
+    }
+
+    // Private helper methods
+
+    private void validateCode(String code) {
+        if (!StringUtils.hasText(code)) {
+            throw new IllegalArgumentException("Authorization code is required");
+        }
+    }
+
+    private void validateAccessToken(String accessToken) {
+        if (!StringUtils.hasText(accessToken)) {
+            throw new IllegalArgumentException("Access token is required");
+        }
+    }
+
+    private void validateTokenResponse(KakaoTokenResponseDto response) {
+        if (response == null || !response.isValid()) {
+            throw new KakaoApiException("Failed to obtain valid access token from Kakao");
+        }
+    }
+
+    private void validateUserInfoResponse(KakaoUserInfoResponseDto response) {
+        if (response == null || !response.isValid()) {
+            throw new KakaoApiException("Failed to obtain valid user info from Kakao");
+        }
+    }
+
+    private String buildTokenRequest(String code) {
+        return String.format("grant_type=authorization_code&client_id=%s&code=%s", 
+                clientId, code);
+    }
+
+    private Mono<? extends Throwable> handleClientError(org.springframework.web.reactive.function.client.ClientResponse response) {
+        return Mono.error(new KakaoApiException("Kakao API client error: " + response.statusCode()));
+    }
+
+    private Mono<? extends Throwable> handleServerError(org.springframework.web.reactive.function.client.ClientResponse response) {
+        return Mono.error(new KakaoApiException("Kakao API server error: " + response.statusCode()));
     }
 }

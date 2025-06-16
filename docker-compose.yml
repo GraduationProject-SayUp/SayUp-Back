@@ -4,41 +4,128 @@ services:
   mysql:
     image: mysql:8.0
     container_name: sayup_mysql
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
       MYSQL_DATABASE: "sayup_db"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      TZ: "Asia/Seoul"
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - mysql_backup:/backup
+      - ./mysql/init:/docker-entrypoint-initdb.d
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: sayup_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - redis_backup:/backup
+    networks:
+      - app_network
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
 
   app:
-    build: .
-    image: ${DOCKERHUB_USERNAME}/sayup:latest
-    container_name: sayup
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USERNAME:-sayup}/sayup:${IMAGE_TAG:-latest}
+    container_name: sayup_app
+    restart: unless-stopped
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - .env.prod
     environment:
+      SPRING_PROFILES_ACTIVE: "prod"
       DB_CONNECTION: "mysql"
+      DB_HOST: "mysql"
       DB_NAME: "sayup_db"
-      DB_USERNAME: "root"
+      DB_USERNAME: "${DB_USERNAME}"
       DB_PASSWORD: "${DB_PASSWORD}"
-      # 경로 변경 필요
-      FILE_UPLOAD_DIR: "tmp/file/userVoice"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      FILE_UPLOAD_DIR: "/app/tmp/file/userVoice"
       API_KEY: "${CHATGPT_API_KEY}"
+      JWT_SECRET: "${JWT_SECRET}"
+      KAKAO_CLIENT_ID: "${KAKAO_CLIENT_ID}"
+      TZ: "Asia/Seoul"
     ports:
       - "8080:8080"
+    volumes:
+      - app_logs:/app/logs
+      - app_files:/app/tmp/file/userVoice
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 volumes:
   mysql_data:
+    driver: local
+  mysql_backup:
+    driver: local
+  redis_data:
+    driver: local
+  redis_backup:
+    driver: local
+  app_logs:
+    driver: local
+  app_files:
+    driver: local

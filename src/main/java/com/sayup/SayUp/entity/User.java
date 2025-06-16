@@ -1,41 +1,60 @@
 package com.sayup.SayUp.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.Objects;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
-@Table(name = "Users")
+@Table(name = "User")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
-    public User() {
-    }
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
+    @Column(length = 100)
     private String username;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 255)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
     @Lob
+    @Column(columnDefinition = "TEXT")
     private String ttsVector;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
+    @Column(length = 20)
     private String role;
+
+    @Column
+    private LocalDateTime lastLoginAt;
+
+    @Column
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (role == null) {
+            role = "USER";
+        }
+        if (isActive == null) {
+            isActive = true;
+        }
+    }
 
     @Override
     public boolean equals(Object obj) {

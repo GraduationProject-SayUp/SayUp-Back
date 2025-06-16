@@ -1,162 +1,264 @@
 package com.sayup.SayUp.service;
 
-import com.sayup.SayUp.controller.AuthController;
 import com.sayup.SayUp.dto.AuthRequestDTO;
 import com.sayup.SayUp.dto.AuthResponseDTO;
 import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.kakao.dto.KakaoUserInfoResponseDto;
+import com.sayup.SayUp.kakao.service.KakaoService;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.CustomUserDetails;
 import com.sayup.SayUp.security.JwtTokenProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Collection;
+import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
+@Transactional
 public class AuthService implements UserDetailsService {
+    
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-    private final Set<String> tokenBlacklist = new HashSet<>();
-
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider,
-                       @Lazy AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
+    private final TokenBlacklistService tokenBlacklistService;
+    private final KakaoService kakaoService;
 
     /**
      * 회원가입 로직
-     * @param authRequestDTO 회원가입 요청 DTO
      */
-    public void register(AuthRequestDTO authRequestDTO) {
-        userRepository.findByEmail(authRequestDTO.getEmail()).ifPresent(user -> {
-            logger.info("Registration attempt failed: Email already exists - {}", authRequestDTO.getEmail());
-            throw new IllegalArgumentException("The email address is already in use. Please try another one.");
-        });
+    public AuthResponseDTO register(AuthRequestDTO authRequestDTO) {
+        // 이메일 중복 확인
+        if (userRepository.existsByEmail(authRequestDTO.getEmail())) {
+            log.warn("Registration attempt failed: Email already exists - {}", authRequestDTO.getEmail());
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
 
-        User user = new User();
-        user.setEmail(authRequestDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(authRequestDTO.getPassword())); // 비밀번호 암호화
-
-        userRepository.save(user);
-        logger.info("User registered successfully with email: {}", authRequestDTO.getEmail());
-    }
-
-    // 카카오 로그인 시 사용자 자동 등록
-    public User loadOrCreateUser(String email) {
-        return userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    User user = new User();
-                    user.setEmail(email);
-                    user.setPassword(passwordEncoder.encode("kakao_user")); // OAuth 사용자는 임시 비밀번호
-
-                    user.setRole("USER"); // 기본 역할 설정
-
-                    return userRepository.save(user);
-                });
-    }
-
-    /**
-     * Spring Security UserDetailsService 구현
-     * @param email 사용자 이메일
-     * @return UserDetails 객체
-     * @throws UsernameNotFoundException 사용자 찾지 못했을 때 예외
-     */
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        /*
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .authorities(Collections.emptyList()) // 권한 설정
+        // 사용자 생성
+        User user = User.builder()
+                .email(authRequestDTO.getEmail())
+                .username(authRequestDTO.getEmail().split("@")[0])
+                .password(passwordEncoder.encode(authRequestDTO.getPassword()))
+                .role("USER")
+                .createdAt(LocalDateTime.now())
                 .build();
-         */
-        return new CustomUserDetails(user);
+
+        User savedUser = userRepository.save(user);
+        log.info("User registered successfully with email: {}", authRequestDTO.getEmail());
+
+        // 자동 로그인 처리
+        return login(authRequestDTO);
     }
 
     /**
      * 로그인 로직
-     * @param authRequestDTO 로그인 요청 DTO
-     * @return AuthResponseDTO (JWT와 사용자 이메일)
      */
     public AuthResponseDTO login(AuthRequestDTO authRequestDTO) {
-        // Authentication 객체 생성 및 인증
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        authRequestDTO.getEmail(),
-                        authRequestDTO.getPassword()
-                )
-        );
+        try {
+            // 사용자 조회
+            User user = userRepository.findByEmail(authRequestDTO.getEmail())
+                    .orElseThrow(() -> new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
 
-        String jwt = jwtTokenProvider.createToken(authentication);
+            // 비밀번호 검증
+            if (!passwordEncoder.matches(authRequestDTO.getPassword(), user.getPassword())) {
+                log.warn("Login failed for email: {} - Invalid password", authRequestDTO.getEmail());
+                throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
+            }
 
-        User user = userRepository.findByEmail(authRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            // 인증 토큰 생성
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    user.getEmail(),
+                    null,
+                    Collections.singletonList(new SimpleGrantedAuthority(user.getRole()))
+            );
 
-        logger.info("Login successful for email: {}", authRequestDTO.getEmail());
+            // JWT 토큰 생성
+            String accessToken = jwtTokenProvider.createToken(authentication);
+            String refreshToken = jwtTokenProvider.createRefreshToken(authentication);
 
-        return new AuthResponseDTO(jwt, authRequestDTO.getEmail(), String.valueOf(user.getUserId()));
-    }
+            log.info("Login successful for email: {}", authRequestDTO.getEmail());
 
+            // 응답 생성
+            return AuthResponseDTO.builder()
+                    .accessToken(accessToken)
+                    .tokenType("Bearer")
+                    .expiresIn(jwtTokenProvider.getExpirationTime())
+                    .refreshToken(refreshToken)
+                    .userInfo(AuthResponseDTO.UserInfo.builder()
+                            .userId(user.getUserId())
+                            .email(user.getEmail())
+                            .username(user.getUsername())
+                            .role(user.getRole())
+                            .build())
+                    .build();
 
-
-    /**
-     * 토큰을 블랙리스트에 추가
-     * @param token 무효화할 토큰
-     */
-    public void invalidateToken(String token) {
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            tokenBlacklist.add(token);
-            logger.info("Token invalidated and added to blacklist: {}", token);
-        } else {
-            logger.warn("Attempted to invalidate an invalid or empty token.");
-            throw new IllegalArgumentException("Invalid token. Cannot invalidate.");
+        } catch (BadCredentialsException e) {
+            log.warn("Login failed for email: {} - Invalid credentials", authRequestDTO.getEmail());
+            throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
     }
 
+    /**
+     * 카카오 로그인 처리
+     */
+    public AuthResponseDTO kakaoLogin(String code) {
+        try {
+            // 카카오 API로 사용자 정보 조회
+            KakaoUserInfoResponseDto kakaoUserInfo = kakaoService.processKakaoLogin(code);
+            
+            // 이메일 검증
+            String email = kakaoUserInfo.getEmail();
+            if (!StringUtils.hasText(email)) {
+                throw new IllegalArgumentException("카카오 계정에서 이메일 정보를 가져올 수 없습니다.");
+            }
+
+            // 이메일 인증 여부 확인 (선택사항)
+            if (!kakaoUserInfo.isEmailVerified()) {
+                log.warn("Kakao user email not verified: {}", email);
+            }
+
+            // 사용자 조회 또는 생성
+            User user = userRepository.findByEmail(email)
+                    .orElseGet(() -> createKakaoUser(kakaoUserInfo));
+
+            // JWT 토큰 생성
+            String accessToken = jwtTokenProvider.createTokenFromEmail(email);
+            String refreshToken = jwtTokenProvider.createRefreshTokenFromEmail(email);
+
+            log.info("Kakao login successful for user: {}", email);
+
+            return AuthResponseDTO.builder()
+                    .accessToken(accessToken)
+                    .tokenType("Bearer")
+                    .expiresIn(jwtTokenProvider.getExpirationTime())
+                    .refreshToken(refreshToken)
+                    .userInfo(AuthResponseDTO.UserInfo.builder()
+                            .userId(user.getUserId())
+                            .email(user.getEmail())
+                            .username(user.getUsername())
+                            .role(user.getRole())
+                            .build())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Kakao login failed: {}", e.getMessage());
+            throw new IllegalArgumentException("카카오 로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
     /**
-     * 토큰이 블랙리스트에 있는지 확인
-     * @param token 확인할 토큰
-     * @return 블랙리스트 여부
+     * 카카오 사용자 생성
+     */
+    private User createKakaoUser(KakaoUserInfoResponseDto kakaoUserInfo) {
+        String email = kakaoUserInfo.getEmail();
+        String nickname = kakaoUserInfo.getNickname();
+        String username = StringUtils.hasText(nickname) ? nickname : email.split("@")[0];
+
+        User newUser = User.builder()
+                .email(email)
+                .username(username)
+                .password(passwordEncoder.encode(generateSecureRandomPassword()))
+                .role("USER")
+                .createdAt(LocalDateTime.now())
+                .build();
+        
+        User savedUser = userRepository.save(newUser);
+        log.info("New Kakao user created: {} (ID: {})", email, savedUser.getUserId());
+        return savedUser;
+    }
+
+    /**
+     * 토큰 갱신
+     */
+    public AuthResponseDTO refreshToken(String refreshToken) {
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        String email = jwtTokenProvider.getUsernameFromToken(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String newAccessToken = jwtTokenProvider.createTokenFromEmail(email);
+        String newRefreshToken = jwtTokenProvider.createRefreshTokenFromEmail(email);
+
+        return AuthResponseDTO.builder()
+                .accessToken(newAccessToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getExpirationTime())
+                .refreshToken(newRefreshToken)
+                .userInfo(AuthResponseDTO.UserInfo.builder()
+                        .userId(user.getUserId())
+                        .email(user.getEmail())
+                        .username(user.getUsername())
+                        .role(user.getRole())
+                        .build())
+                .build();
+    }
+
+    /**
+     * 로그아웃
+     */
+    public void logout(String token) {
+        if (!StringUtils.hasText(token)) {
+            throw new IllegalArgumentException("토큰이 비어있습니다.");
+        }
+
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
+        long expirationTime = jwtTokenProvider.getExpirationTime(token);
+        tokenBlacklistService.addToBlacklist(token, expirationTime);
+        
+        log.info("User logged out successfully");
+    }
+
+    /**
+     * 토큰 블랙리스트 확인
      */
     public boolean isTokenBlacklisted(String token) {
         if (!StringUtils.hasText(token)) {
-            logger.warn("Empty token checked for blacklist.");
-            throw new IllegalArgumentException("Token cannot be empty.");
+            return false;
         }
-        return tokenBlacklist.contains(token);
+        return tokenBlacklistService.isBlacklisted(token);
     }
 
-    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        // 모든 사용자에게 "ROLE_USER" 권한을 부여
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+    /**
+     * Spring Security UserDetailsService 구현
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        return new CustomUserDetails(user);
+    }
+
+    /**
+     * 보안을 위한 랜덤 비밀번호 생성
+     */
+    private String generateSecureRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        StringBuilder sb = new StringBuilder();
+        java.util.Random random = new java.util.Random();
+        for (int i = 0; i < 32; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 }
