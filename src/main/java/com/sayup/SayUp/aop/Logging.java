@@ -8,7 +8,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -37,7 +36,6 @@ public class Logging {
         String methodName = signature.getMethod().getName();
         String className = signature.getDeclaringType().getSimpleName();
 
-
         // Query Parameter
         StringBuilder queryParams = new StringBuilder();
         Enumeration<String> parameterNames = request.getParameterNames();
@@ -51,29 +49,91 @@ public class Logging {
         }
 
         long startTime = System.currentTimeMillis();
-        Object result = joinPoint.proceed();
-        long elapsedTime = System.currentTimeMillis() - startTime;
+        Object result = null;
+        boolean isSuccess = true;
+        String errorMessage = null;
 
-        logger.info("[{}] {} {} | Method: {}.{}() | Execution time: {} ms | QueryParams: [{}]",
-                httpMethod, uri, queryParams.toString(), className, methodName, elapsedTime, queryParams);
-
-        return result;
+        try {
+            result = joinPoint.proceed();
+            return result;
+        } catch (Exception e) {
+            isSuccess = false;
+            errorMessage = e.getMessage();
+            throw e;
+        } finally {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            
+            if (isSuccess) {
+                logger.info("[{}] {} {} | Method: {}.{}() | Execution time: {} ms | QueryParams: [{}] | Status: SUCCESS",
+                        httpMethod, uri, queryParams.toString(), className, methodName, elapsedTime, queryParams);
+            } else {
+                logger.error("[{}] {} {} | Method: {}.{}() | Execution time: {} ms | QueryParams: [{}] | Status: FAILED | Error: {}",
+                        httpMethod, uri, queryParams.toString(), className, methodName, elapsedTime, queryParams, errorMessage);
+            }
+        }
     }
 
-    // @RestController 또는 @Service 가 붙은 클래스만 AOP 적용
-    @Around("within(@org.springframework.web.bind.annotation.RestController *) || within(@org.springframework.stereotype.Service *)")
-    // 예외 발생 시 로그 출력
-    public Object logExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
+    // @Service 클래스의 메서드 실행 시간과 예외 로깅
+    @Around("within(@org.springframework.stereotype.Service *)")
+    public Object logServiceMethods(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        String methodName = signature.getMethod().getName();
+        String className = signature.getDeclaringType().getSimpleName();
+
+        long startTime = System.currentTimeMillis();
+        Object result = null;
+        boolean isSuccess = true;
+        String errorMessage = null;
+
         try {
-            return joinPoint.proceed();  // 원래 메서드 실행
+            result = joinPoint.proceed();
+            return result;
         } catch (Exception e) {
-            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-            String methodName = signature.getMethod().getName();
-            String className = signature.getDeclaringType().getSimpleName();
+            isSuccess = false;
+            errorMessage = e.getMessage();
+            logger.error("Service Exception in {}.{}() | Error: {}", className, methodName, e.getMessage());
+            throw e;
+        } finally {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            
+            if (isSuccess) {
+                logger.debug("Service Method: {}.{}() | Execution time: {} ms | Status: SUCCESS",
+                        className, methodName, elapsedTime);
+            } else {
+                logger.error("Service Method: {}.{}() | Execution time: {} ms | Status: FAILED | Error: {}",
+                        className, methodName, elapsedTime, errorMessage);
+            }
+        }
+    }
 
-            logger.error("Exception in {}.{}() | Error: {}", className, methodName, e.getMessage());
+    // Repository 메서드 실행 시간 모니터링
+    @Around("within(@org.springframework.stereotype.Repository *)")
+    public Object logRepositoryMethods(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        String methodName = signature.getMethod().getName();
+        String className = signature.getDeclaringType().getSimpleName();
 
-            throw e;  // 예외를 다시 던져서 spring이 처리하게 함
+        long startTime = System.currentTimeMillis();
+        Object result = null;
+        boolean isSuccess = true;
+
+        try {
+            result = joinPoint.proceed();
+            return result;
+        } catch (Exception e) {
+            isSuccess = false;
+            logger.error("Repository Exception in {}.{}() | Error: {}", className, methodName, e.getMessage());
+            throw e;
+        } finally {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            
+            if (isSuccess) {
+                logger.debug("Repository Method: {}.{}() | Execution time: {} ms | Status: SUCCESS",
+                        className, methodName, elapsedTime);
+            } else {
+                logger.error("Repository Method: {}.{}() | Execution time: {} ms | Status: FAILED",
+                        className, methodName, elapsedTime);
+            }
         }
     }
 }
