@@ -20,9 +20,9 @@ public class Friendship {
 
     @ManyToOne
     @JoinColumn(name = "user1Id", nullable = false)
-    private Users user1;
+    private User user1;
 
     @ManyToOne
     @JoinColumn(name = "user2Id", nullable = false)
-    private Users user2;
+    private User user2;
 }

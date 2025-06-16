@@ -18,11 +18,11 @@ public class FriendRelationship {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id", nullable = false)
-    private Users requester;
+    private User requester;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "addressee_id", nullable = false)
-    private Users addressee;
+    private User addressee;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

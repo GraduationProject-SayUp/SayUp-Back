@@ -15,7 +15,7 @@ public class AuthToken {
 
     @OneToOne
     @JoinColumn(name = "userId", nullable = false, unique = true)
-    private Users user;
+    private User user;
 
     @Column(nullable = false, unique = true)
     private String token;

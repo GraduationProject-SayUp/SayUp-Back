@@ -23,11 +23,11 @@ public class PendingRequest {
 
     @ManyToOne
     @JoinColumn(name = "requesterId", nullable = false)
-    private Users requester;
+    private User requester;
 
     @ManyToOne
     @JoinColumn(name = "receiverId", nullable = false)
-    private Users receiver;
+    private User receiver;
 
     public enum Status {
         PENDING, ACCEPTED, REJECTED
