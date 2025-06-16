@@ -42,6 +42,7 @@ public class User {
     private LocalDateTime lastLoginAt;
 
     @Column
+    @Builder.Default
     private Boolean isActive = true;
 
     @PrePersist
