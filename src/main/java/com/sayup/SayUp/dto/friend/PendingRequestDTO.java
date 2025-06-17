@@ -1,6 +1,6 @@
-package com.sayup.SayUp.dto;
+package com.sayup.SayUp.dto.friend;
 
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.entity.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

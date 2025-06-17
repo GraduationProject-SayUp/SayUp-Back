@@ -1,10 +1,10 @@
 package com.sayup.SayUp.kakao.controller;
 
-import com.sayup.SayUp.dto.AuthResponseDTO;
+import com.sayup.SayUp.dto.auth.AuthResponseDTO;
 import com.sayup.SayUp.kakao.dto.KakaoUserInfoResponseDto;
 import com.sayup.SayUp.kakao.exception.KakaoApiException;
 import com.sayup.SayUp.kakao.service.KakaoService;
-import com.sayup.SayUp.service.AuthService;
+import com.sayup.SayUp.service.auth.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

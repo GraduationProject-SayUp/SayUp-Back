@@ -1,6 +1,6 @@
-package com.sayup.SayUp.service;
+package com.sayup.SayUp.service.user;
 
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

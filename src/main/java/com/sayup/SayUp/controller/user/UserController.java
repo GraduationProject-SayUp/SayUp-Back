@@ -1,7 +1,7 @@
-package com.sayup.SayUp.controller;
+package com.sayup.SayUp.controller.user;
 
-import com.sayup.SayUp.dto.SearchDTO;
-import com.sayup.SayUp.service.UserService;
+import com.sayup.SayUp.dto.friend.SearchDTO;
+import com.sayup.SayUp.service.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

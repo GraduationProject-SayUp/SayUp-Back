@@ -1,6 +1,6 @@
 package com.sayup.SayUp.security;
 
-import com.sayup.SayUp.service.AuthService;
+import com.sayup.SayUp.service.auth.AuthService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;

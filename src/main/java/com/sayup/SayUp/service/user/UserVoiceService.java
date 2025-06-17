@@ -1,7 +1,7 @@
-package com.sayup.SayUp.service;
+package com.sayup.SayUp.service.user;
 
-import com.sayup.SayUp.entity.User;
-import com.sayup.SayUp.entity.UserVoice;
+import com.sayup.SayUp.entity.user.User;
+import com.sayup.SayUp.entity.user.UserVoice;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.repository.UserVoiceRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;

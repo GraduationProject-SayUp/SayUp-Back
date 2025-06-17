@@ -1,25 +1,20 @@
-package com.sayup.SayUp.entity;
+package com.sayup.SayUp.entity.chat;
 
+import com.sayup.SayUp.entity.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "UserVoice")
+@Table(name = "Chat")
 @Getter
 @Setter
-public class UserVoice {
+public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long chatId;
 
     @OneToOne
     @JoinColumn(name = "userId", nullable = false, unique = true)
     private User user;
-
-    @Column(nullable = false)
-    private String fileName;
-
-    @Column(nullable = false)
-    private String filePath;
 }

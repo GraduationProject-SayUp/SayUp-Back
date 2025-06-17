@@ -1,8 +1,8 @@
-package com.sayup.SayUp.service;
+package com.sayup.SayUp.service.friend;
 
-import com.sayup.SayUp.dto.PendingRequestDTO;
-import com.sayup.SayUp.entity.FriendRelationship;
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.dto.friend.PendingRequestDTO;
+import com.sayup.SayUp.entity.friend.FriendRelationship;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.repository.FriendshipRepository;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.CustomUserDetails;

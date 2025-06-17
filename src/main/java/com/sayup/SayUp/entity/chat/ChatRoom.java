@@ -1,5 +1,6 @@
-package com.sayup.SayUp.entity;
+package com.sayup.SayUp.entity.chat;
 
+import com.sayup.SayUp.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 

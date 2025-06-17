@@ -1,8 +1,8 @@
-package com.sayup.SayUp.controller;
+package com.sayup.SayUp.controller.auth;
 
-import com.sayup.SayUp.dto.AuthRequestDTO;
-import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.service.AuthService;
+import com.sayup.SayUp.dto.auth.AuthRequestDTO;
+import com.sayup.SayUp.dto.auth.AuthResponseDTO;
+import com.sayup.SayUp.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

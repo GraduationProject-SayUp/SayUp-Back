@@ -2,7 +2,7 @@ package com.sayup.SayUp.config;
 
 import com.sayup.SayUp.security.JwtAuthenticationFilter;
 import com.sayup.SayUp.security.JwtTokenProvider;
-import com.sayup.SayUp.service.AuthService;
+import com.sayup.SayUp.service.auth.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +20,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity  // Spring Security 설정 활성화

@@ -1,7 +1,7 @@
-package com.sayup.SayUp.controller;
+package com.sayup.SayUp.controller.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;

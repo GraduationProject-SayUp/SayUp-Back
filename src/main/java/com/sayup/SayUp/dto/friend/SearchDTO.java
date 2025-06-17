@@ -1,4 +1,4 @@
-package com.sayup.SayUp.dto;
+package com.sayup.SayUp.dto.friend;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

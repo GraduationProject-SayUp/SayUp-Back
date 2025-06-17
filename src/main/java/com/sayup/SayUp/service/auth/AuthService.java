@@ -1,8 +1,8 @@
-package com.sayup.SayUp.service;
+package com.sayup.SayUp.service.auth;
 
-import com.sayup.SayUp.dto.AuthRequestDTO;
-import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.dto.auth.AuthRequestDTO;
+import com.sayup.SayUp.dto.auth.AuthResponseDTO;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.kakao.dto.KakaoUserInfoResponseDto;
 import com.sayup.SayUp.kakao.service.KakaoService;
 import com.sayup.SayUp.repository.UserRepository;

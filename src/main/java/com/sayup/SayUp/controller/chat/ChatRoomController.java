@@ -1,7 +1,7 @@
-package com.sayup.SayUp.controller;
+package com.sayup.SayUp.controller.chat;
 
-import com.sayup.SayUp.entity.ChatRoom;
-import com.sayup.SayUp.service.ChatRoomService;
+import com.sayup.SayUp.entity.chat.ChatRoom;
+import com.sayup.SayUp.service.chat.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
