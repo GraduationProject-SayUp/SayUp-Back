@@ -1,4 +1,4 @@
-package com.sayup.SayUp.dto;
+package com.sayup.SayUp.dto.auth;
 
 import lombok.*;
 

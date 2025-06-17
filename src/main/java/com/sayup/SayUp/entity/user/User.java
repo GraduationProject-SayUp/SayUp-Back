@@ -1,4 +1,4 @@
-package com.sayup.SayUp.entity;
+package com.sayup.SayUp.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;

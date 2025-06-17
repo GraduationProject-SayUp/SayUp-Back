@@ -1,6 +1,6 @@
 package com.sayup.SayUp.security;
 
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.entity.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

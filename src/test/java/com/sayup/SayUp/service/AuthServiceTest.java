@@ -1,11 +1,13 @@
 package com.sayup.SayUp.service;
 
-import com.sayup.SayUp.dto.AuthRequestDTO;
-import com.sayup.SayUp.dto.AuthResponseDTO;
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.dto.auth.AuthRequestDTO;
+import com.sayup.SayUp.dto.auth.AuthResponseDTO;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.kakao.service.KakaoService;
 import com.sayup.SayUp.repository.UserRepository;
 import com.sayup.SayUp.security.JwtTokenProvider;
+import com.sayup.SayUp.service.auth.AuthService;
+import com.sayup.SayUp.service.auth.TokenBlacklistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,8 +1,8 @@
-package com.sayup.SayUp.service;
+package com.sayup.SayUp.service.chat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sayup.SayUp.entity.ChatRoom;
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.entity.chat.ChatRoom;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.repository.ChatRoomRepository;
 import com.sayup.SayUp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

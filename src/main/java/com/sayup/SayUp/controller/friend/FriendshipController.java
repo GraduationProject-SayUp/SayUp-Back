@@ -1,9 +1,9 @@
-package com.sayup.SayUp.controller;
+package com.sayup.SayUp.controller.friend;
 
-import com.sayup.SayUp.dto.PendingRequestDTO;
-import com.sayup.SayUp.entity.User;
+import com.sayup.SayUp.dto.friend.PendingRequestDTO;
+import com.sayup.SayUp.entity.user.User;
 import com.sayup.SayUp.security.CustomUserDetails;
-import com.sayup.SayUp.service.FriendshipService;
+import com.sayup.SayUp.service.friend.FriendshipService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

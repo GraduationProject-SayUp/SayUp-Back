@@ -1,7 +1,6 @@
-package com.sayup.SayUp.controller;
+package com.sayup.SayUp.controller.user;
 
-import com.sayup.SayUp.repository.UserVoiceRepository;
-import com.sayup.SayUp.service.UserVoiceService;
+import com.sayup.SayUp.service.user.UserVoiceService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
